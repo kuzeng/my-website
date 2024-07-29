@@ -3223,3 +3223,11 @@ input, select, textarea {
 			}
 
 	}
+
+	.left-text {
+		text-align: left;
+	}
+
+	.right-text {
+		float: right;
+	}
