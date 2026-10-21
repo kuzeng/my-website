@@ -1,0 +1,63 @@
+---
+// Left half of the unfolded screen: the personal side. On phones it flows after the cover.
+import { profile, heroFacts } from '../data/profile';
+import { avatarSrc, avatarIsMemoji } from '../lib/env';
+import Now from './Now.astro';
+---
+<div class="about">
+  <!-- iOS 26-style back button: folds the device. Swipe left and Esc do the same. -->
+  <button class="back-btn glass" type="button" data-fold aria-label="Fold back to the cover screen" title="Fold (Esc)">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <div class="id">
+    <img class={`portrait${avatarIsMemoji ? ' memoji' : ''}`} src={avatarSrc} alt="" width="64" height="64" />
+    <div>
+      <p class="name">{profile.name}</p>
+      <p class="small muted">{profile.role} · {profile.company} · Bay Area</p>
+    </div>
+  </div>
+
+  <dl class="facts">
+    {heroFacts.map((f) => (
+      <div><dt>{f.label}</dt><dd>{f.value}</dd></div>
+    ))}
+  </dl>
+
+  <section id="now" class="now-block" aria-labelledby="now-title">
+    <h2 class="h2 now-title" id="now-title" tabindex="-1">Currently. <span class="tone">Outside of work.</span></h2>
+    <Now />
+  </section>
+
+</div>
+
+<style>
+  .about { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; padding-block: var(--s-5) var(--s-8); }
+  .id, .back-btn { display: none; }
+
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); padding-block: var(--s-5); border-block: 1px solid var(--rule); }
+  @container (min-width: 680px) { .facts { grid-template-columns: 1fr 1fr 1.5fr .8fr; } }
+  .facts div { display: grid; gap: .15rem; align-content: start; }
+  dt { font-size: var(--t-xs); color: var(--muted); }
+  dd { margin: 0; font-size: var(--t-sm); font-weight: 500; line-height: 1.45; }
+
+  .now-block { margin-top: var(--s-8); }
+  .now-title { margin-bottom: var(--s-6); }
+
+  /* Unfolded: a full-height column with nav pinned at the bottom */
+  @media (min-width: 1000px) and (min-height: 640px) {
+    .about { width: auto; margin: 0; min-height: 100%; display: flex; flex-direction: column; padding: 2.6rem clamp(1.5rem, 6cqi, 2.5rem) 2rem; }
+    .back-btn {
+      display: grid; place-items: center; flex: none; align-self: flex-start;
+      width: 40px; height: 40px; margin: 0 0 var(--s-5) -.25rem; border: 0; border-radius: 50%;
+      color: var(--ink); cursor: pointer;
+    }
+    .id { display: flex; align-items: center; gap: var(--s-4); }
+    .portrait { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--bg-2); box-shadow: 0 0 0 1px var(--rule); }
+    .portrait.memoji { object-fit: contain; background: var(--chassis); }
+    .name { font-size: var(--t-md); font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+    .facts { margin-top: var(--s-6); }
+    .now-block { margin-top: var(--s-7); }
+    .now-title { font-size: clamp(1.4rem, 6cqi, 1.9rem); margin-bottom: var(--s-4); }
+  }
+</style>

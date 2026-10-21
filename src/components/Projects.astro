@@ -1,0 +1,52 @@
+---
+import { projects } from '../data/projects';
+---
+<div class="list">
+  {projects.map((p) => (
+    <article class="project">
+      {p.image && (
+        <figure class="shot">
+          <img
+            src={`${p.image.base}-960.webp`}
+            srcset={`${p.image.base}-480.webp 480w, ${p.image.base}-960.webp 960w`}
+            sizes="(min-width: 1080px) 1016px, 100vw"
+            width={p.image.width} height={p.image.height}
+            alt={p.image.alt} loading="lazy" decoding="async"
+          />
+        </figure>
+      )}
+      <div class="p-grid">
+        <div class="p-head">
+          <p class="kind small muted tnum">{p.kind} · {p.period}</p>
+          <h3>{p.title}</h3>
+          <p class="prose">{p.summary}</p>
+          <div class="links">
+            {p.links.map((l) => (
+              <a class="more" href={l.href} rel="noopener">{l.label}<span class="sr-only"> (opens external site)</span></a>
+            ))}
+          </div>
+        </div>
+        <div class="p-detail">
+          <ul class="points">{p.points.map((x) => <li>{x}</li>)}</ul>
+          <ul class="stack mono">{p.tags.map((t) => <li>{t}</li>)}</ul>
+        </div>
+      </div>
+    </article>
+  ))}
+</div>
+
+<style>
+  .list { display: grid; gap: var(--s-8); }
+  @container (min-width: 880px) { .list { gap: var(--s-9); } }
+  .shot { margin-bottom: var(--s-6); padding: clamp(.75rem, 2vw, 1.5rem); background: var(--bg-2); border-radius: var(--r-lg); }
+  .shot img { width: 100%; height: auto; border-radius: calc(var(--r-lg) - 10px); }
+  .p-grid { display: grid; gap: var(--s-5); }
+  @container (min-width: 680px) { .p-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--s-8); } }
+  .p-head { display: grid; gap: var(--s-3); align-content: start; }
+  h3 { font-size: var(--t-md); letter-spacing: -.022em; line-height: 1.2; }
+  .links { display: flex; flex-wrap: wrap; gap: 0 var(--s-5); margin-top: -.25rem; }
+  .p-detail { display: grid; gap: var(--s-5); align-content: start; }
+  .points { list-style: none; padding: 0; display: grid; gap: var(--s-3); color: var(--ink-2); font-size: var(--t-sm); line-height: 1.55; }
+  .points li { padding-left: 1.1rem; position: relative; }
+  .points li::before { content: ""; position: absolute; left: 0; top: .68em; width: 5px; height: 1px; background: var(--faint); }
+</style>

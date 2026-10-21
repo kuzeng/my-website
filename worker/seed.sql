@@ -1,0 +1,42 @@
+-- Interview questionnaire: draft facts with empty answers. Fill them in on /admin → Interview; a filled answer goes live.
+-- Safe to run once on a fresh database (re-running adds duplicates).
+INSERT INTO facts (question, audience) VALUES
+  -- Recruiters / hiring managers
+  ('What kind of iOS work does he enjoy most?', 'recruiter'),
+  ('Why did he go from USAA to Lululemon to Intuit?', 'recruiter'),
+  ('What is the project he is proudest of, and why?', 'recruiter'),
+  ('What role does he usually play on a team?', 'recruiter'),
+  ('How does he work with designers and product managers?', 'recruiter'),
+  ('What does he look for in a team or a manager?', 'recruiter'),
+  ('How does he handle disagreement in code review?', 'recruiter'),
+  ('What was the hardest bug or incident he worked through?', 'recruiter'),
+  ('Has he mentored or onboarded other engineers?', 'recruiter'),
+  ('What did he learn building the Lululemon calling app (VoIP, CallKit, offline)?', 'recruiter'),
+  ('Is he comfortable with remote, hybrid, or on-site work?', 'recruiter'),
+  ('What languages does he speak?', 'recruiter'),
+  -- Fellow engineers
+  ('How does he practice test-driven development on iOS?', 'engineer'),
+  ('How is he using Apple''s Foundation Models (on-device AI)?', 'engineer'),
+  ('How does he use Claude Code or Cursor day to day?', 'engineer'),
+  ('How does he review AI-written code before it ships?', 'engineer'),
+  ('SwiftUI or UIKit: when does he pick which?', 'engineer'),
+  ('What did the Swift 6 strict-concurrency migration of ImageFeedApp teach him?', 'engineer'),
+  ('What are his favorite debugging and profiling tools?', 'engineer'),
+  ('How does he approach accessibility (VoiceOver, Dynamic Type)?', 'engineer'),
+  ('How does he structure a modular iOS app?', 'engineer'),
+  ('Which blogs, newsletters, or people does he learn from?', 'engineer'),
+  ('What is he building next?', 'engineer'),
+  ('How was this website built?', 'engineer'),
+  -- Friends / general visitors
+  ('What does he do outside of work?', 'friend'),
+  ('What sports does he play or follow?', 'friend'),
+  ('What music is he listening to right now?', 'friend'),
+  ('What book would he recommend?', 'friend'),
+  ('Where did he grow up?', 'friend'),
+  ('Why did he become a software engineer?', 'friend'),
+  ('What is his favorite app, and why?', 'friend'),
+  ('Favorite food or places to eat in the Bay Area?', 'friend'),
+  ('Coffee or tea?', 'friend'),
+  ('Why did he make this website (and an AI assistant for it)?', 'friend'),
+  ('What is a fun fact about him?', 'friend'),
+  ('What is the best way to reach him?', 'general');

@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Page not found">
+  <div class="nf" slot="cover">
+    <h1 class="display">404. <span class="tone">This page doesn’t exist.</span></h1>
+    <p class="links"><a class="more" href="/">Home</a></p>
+  </div>
+</Base>
+<style>
+  .nf { width: min(100% - 2 * var(--gutter), var(--maxw)); margin: auto; padding-block: var(--s-9); }
+  .display { max-width: 14ch; }
+  .links { margin-top: var(--s-5); }
+  @media (min-width: 1000px) and (min-height: 640px) { .nf { width: auto; padding: 0; } .display { font-size: 2.4rem; } }
+</style>

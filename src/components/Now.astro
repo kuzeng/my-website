@@ -1,0 +1,24 @@
+---
+import { now, nowUpdated } from '../data/now';
+import { showPlaceholders } from '../lib/env';
+import Placeholder from './Placeholder.astro';
+const items = now.filter((i) => i.confirmed || showPlaceholders);
+---
+<dl class="now">
+  {items.map((i) => (
+    <div class="row">
+      <dt class="small muted">{i.label}</dt>
+      <dd>{i.text}{!i.confirmed && <Placeholder inline title="confirm" />}</dd>
+    </div>
+  ))}
+</dl>
+<p class="updated small muted">Updated {nowUpdated}</p>
+
+<style>
+  .now { display: grid; max-width: 52rem; }
+  .row { display: grid; gap: .15rem var(--s-6); padding-block: var(--s-3); border-top: 1px solid var(--rule); }
+  .row:last-child { border-bottom: 1px solid var(--rule); }
+  @container (min-width: 680px) { .row { grid-template-columns: 10rem minmax(0, 1fr); align-items: baseline; } }
+  dd { margin: 0; font-size: clamp(1rem, 4cqi, var(--t-md)); letter-spacing: -.018em; line-height: 1.4; }
+  .updated { margin-top: var(--s-4); font-size: var(--t-xs); }
+</style>

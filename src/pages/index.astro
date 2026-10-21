@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Section from '../components/Section.astro';
+import Featured from '../components/Featured.astro';
+import Projects from '../components/Projects.astro';
+import AiWorkflow from '../components/AiWorkflow.astro';
+import Experience from '../components/Experience.astro';
+import Skills from '../components/SkillsEducation.astro';
+import { featured } from '../data/featured';
+import { aiPractice } from '../data/ai';
+import { showPlaceholders } from '../lib/env';
+
+// Gated sections are absent from production until their data is real; dev previews them as placeholders.
+const showFeatured = featured !== null || showPlaceholders;
+const showAi = aiPractice !== null || showPlaceholders;
+---
+<Base>
+  <Hero slot="cover" />
+  <About slot="about" />
+  <Section id="work" title="Selected work." dek="Things I’ve built to get better at the craft.">
+    {showFeatured && <Featured />}
+    <Projects />
+  </Section>
+  {showAi && (
+    <Section id="ai" title="Building with AI." dek="How I work with models, day to day.">
+      <AiWorkflow />
+    </Section>
+  )}
+  <Section id="experience" title="Experience." dek="Where I’ve shipped iOS, and what I studied in between.">
+    <Experience />
+  </Section>
+  <Section id="skills" title="Toolkit." dek="What I reach for.">
+    <Skills />
+  </Section>
+</Base>

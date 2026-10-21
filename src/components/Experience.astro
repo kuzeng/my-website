@@ -1,0 +1,48 @@
+---
+import { experience } from '../data/experience';
+import { education } from '../data/education';
+
+type Entry =
+  | { kind: 'work'; sortKey: string; dates: string; heading: string; org: string; type?: string; location: string; bullets: string[]; stack: string[] }
+  | { kind: 'edu'; sortKey: string; dates: string; heading: string; org: string; detail: string };
+
+const entries: Entry[] = [
+  ...experience.map((r) => ({ kind: 'work' as const, sortKey: r.sortKey, dates: `${r.start} – ${r.end}`, heading: r.title, org: r.company, type: r.type, location: r.location, bullets: r.bullets, stack: r.stack })),
+  ...education.map((e) => ({ kind: 'edu' as const, sortKey: e.sortKey, dates: e.dates, heading: e.degree, org: e.school, detail: e.detail })),
+].sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+---
+<ol class="timeline">
+  {entries.map((e) => (
+    <li class={`entry ${e.kind}`}>
+      <p class="when small muted tnum">{e.dates}</p>
+      <div class="what">
+        <h3>{e.org} <span class="role">{e.heading}</span></h3>
+        {e.kind === 'work' ? (
+          <>
+            <p class="meta small muted">{e.location}{e.type && ` · ${e.type}`}</p>
+            <ul class="bullets">{e.bullets.map((b) => <li>{b}</li>)}</ul>
+            <ul class="stack mono">{e.stack.map((s) => <li>{s}</li>)}</ul>
+          </>
+        ) : (
+          <p class="meta small muted">Education{e.detail && ` · ${e.detail}`}</p>
+        )}
+      </div>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .timeline { list-style: none; padding: 0; display: grid; }
+  .entry { display: grid; gap: var(--s-1) var(--s-6); padding-block: var(--s-6); border-top: 1px solid var(--rule); }
+  .entry:first-child { border-top: 0; padding-top: 0; }
+  @container (min-width: 680px) { .entry { grid-template-columns: 12rem minmax(0, 1fr); } }
+  .when { padding-top: .2rem; }
+  h3 { font-size: var(--t-md); letter-spacing: -.022em; line-height: 1.25; }
+  .role { color: var(--faint); font-weight: 500; }
+  .meta { margin-top: .2rem; }
+  .bullets { list-style: none; padding: 0; margin-top: var(--s-4); display: grid; gap: var(--s-2); color: var(--ink-2); max-width: var(--measure); }
+  .bullets li { padding-left: 1.1rem; position: relative; }
+  .bullets li::before { content: ""; position: absolute; left: 0; top: .78em; width: 5px; height: 1px; background: var(--faint); }
+  .stack { margin-top: var(--s-4); }
+  .edu h3 { font-size: var(--t-base); }
+</style>

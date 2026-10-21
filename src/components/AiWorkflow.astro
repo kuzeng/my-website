@@ -1,0 +1,29 @@
+---
+import { aiPractice, aiQuestions } from '../data/ai';
+import Placeholder from './Placeholder.astro';
+---
+{aiPractice ? (
+  <>
+    <ol class="practice">
+      {aiPractice.map((p, i) => (
+        <li>
+          <span class="small muted tnum n">{String(i + 1).padStart(2, '0')}</span>
+          <h3>{p.title}</h3>
+          <p class="prose">{p.body}</p>
+        </li>
+      ))}
+    </ol>
+  </>
+) : (
+  <Placeholder title="“How I build with AI” is blocked until you confirm what you actually do. Answer these and I’ll write it:">
+    <ul>{aiQuestions.map((q) => <li>{q}</li>)}</ul>
+  </Placeholder>
+)}
+
+<style>
+  .practice { list-style: none; padding: 0; display: grid; gap: var(--s-6); }
+  @container (min-width: 680px) { .practice { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-7) var(--s-6); } }
+  .practice li { display: grid; gap: var(--s-2); padding-top: var(--s-4); border-top: 1px solid var(--rule); }
+  h3 { font-size: var(--t-md); }
+  .prose { font-size: .98rem; }
+</style>

@@ -1,0 +1,45 @@
+---
+import { featured } from '../data/featured';
+import Placeholder from './Placeholder.astro';
+// Rendered by index.astro only when `featured` exists, or in dev as a design preview.
+const f = featured;
+---
+<div class="featured">
+  {f ? (
+    <article class="tile">
+      <p class="status small"><span class={`pip ${f.status}`} aria-hidden="true"></span>{f.status === 'building' ? 'Building' : 'Shipped'} · {f.statusNote}</p>
+      <h3 class="title">{f.title} <span class="tone">{f.oneLiner}</span></h3>
+      {f.screens && f.screens.length > 0 && (
+        <div class="screens">
+          {f.screens.map((s) => <img src={s.src} alt={s.alt} width={s.width} height={s.height} loading="lazy" decoding="async" />)}
+        </div>
+      )}
+      <ul class="points prose">{f.points.map((p) => <li>{p}</li>)}</ul>
+      <ul class="stack mono">{f.tags.map((t) => <li>{t}</li>)}</ul>
+      <a class="more" href={f.repo} rel="noopener">View on GitHub</a>
+    </article>
+  ) : (
+    <article class="tile" aria-label="Flagship project placeholder">
+      <Placeholder title="flagship iOS + AI app slot. Absent from production until src/data/featured.ts is filled." />
+      <p class="status small"><span class="pip building" aria-hidden="true"></span>Building · in public since …</p>
+      <h3 class="title">On-device voicemail. <span class="tone">Transcribed, summarized, and never leaves the phone.</span></h3>
+      <div class="screens" aria-hidden="true"><span></span><span></span><span></span></div>
+      <ul class="stack mono"><li>Foundation Models</li><li>@Generable</li><li>Speech</li><li>SwiftUI</li><li>iOS 26</li></ul>
+    </article>
+  )}
+</div>
+
+<style>
+  .featured { margin-bottom: var(--s-8); }
+  @container (min-width: 880px) { .featured { margin-bottom: var(--s-9); } }
+  .tile { display: grid; gap: var(--s-5); padding: clamp(1.5rem, 5vw, 3.5rem); background: var(--bg-2); border-radius: var(--r-lg); }
+  .status { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; }
+  .pip.building { background: #ff9f0a; }
+  .pip.shipped { background: var(--signal); }
+  .title { font-size: var(--t-lg); letter-spacing: -.03em; line-height: 1.1; max-width: 22ch; text-wrap: balance; }
+  .screens { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.75rem, 2vw, 1.5rem); max-width: 620px; margin-block: var(--s-3); }
+  .screens img { width: 100%; height: auto; border-radius: 22px; }
+  .screens span { aspect-ratio: 9 / 19.5; border-radius: 24px; background: var(--bg); box-shadow: 0 0 0 1px var(--rule); }
+  .points { padding-left: 1.1rem; display: grid; gap: .45rem; }
+</style>

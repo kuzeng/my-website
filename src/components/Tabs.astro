@@ -1,0 +1,115 @@
+---
+// Section nav: a floating Liquid Glass tab bar (bottom of the inner screen's right half; bottom of the page on phones).
+// The selection "lens" slides between tabs; it is a fill, not glass, since glass never sits on glass.
+const base = Astro.url.pathname === '/' ? '' : '/';
+const tabs = [
+  { id: 'work', label: 'Work' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'skills', label: 'Toolkit' },
+  { id: 'contact', label: 'Contact' },
+];
+---
+<nav class="tabs glass" aria-label="Sections">
+  <span class="lens" aria-hidden="true"></span>
+  <ul>
+    {tabs.map((t) => <li><a href={`${base}#${t.id}`} data-tab={t.id}>{t.label}</a></li>)}
+  </ul>
+</nav>
+
+<script>
+  const deviceMode = window.matchMedia('(min-width: 1000px) and (min-height: 640px)');
+  const links = new Map<string, HTMLAnchorElement>();
+  document.querySelectorAll<HTMLAnchorElement>('[data-tab]').forEach((a) => links.set(a.dataset.tab!, a));
+  const targets = [...links.keys()].map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+  const lens = document.querySelector<HTMLElement>('.tabs .lens');
+  const setCurrent = (current: string) => {
+    links.forEach((a, id) => (id === current ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    const a = links.get(current);
+    if (!lens) return;
+    if (!a) { lens.style.opacity = '0'; return; }
+    lens.style.opacity = '1';
+    lens.style.width = `${a.offsetWidth}px`;
+    lens.style.transform = `translateX(${a.offsetLeft}px)`;
+  };
+
+  // A tab click jumps the selection straight to the target, then ignores scroll-tracking until the scroll
+  // actually arrives there; otherwise the lens walks through every section the smooth scroll passes (feels laggy).
+  // A safety timeout releases it if the user takes over scrolling midway.
+  let pending: string | null = null;
+  let safety = 0;
+  let refresh = () => {};
+  links.forEach((a, id) => a.addEventListener('click', () => {
+    pending = id;
+    setCurrent(id);
+    window.clearTimeout(safety);
+    safety = window.setTimeout(() => { pending = null; refresh(); }, 1500);
+  }));
+
+  let detach = () => {};
+  function init() {
+    detach();
+    // Unfolded, the content scrolls inside the right half; on phones, the page itself scrolls.
+    const pane = deviceMode.matches ? document.getElementById('content') : null;
+    const scroller: HTMLElement | Window = pane ?? window;
+    const atBottom = () => pane
+      ? pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 4
+      : innerHeight + scrollY >= document.documentElement.scrollHeight - 4;
+    // Current section = the last one whose top has passed a line 35% down the scroll area. Computed directly
+    // on each scroll (4 rect reads), so it never depends on observer timing.
+    const current = () => {
+      if (atBottom()) return 'contact'; // the last section can't scroll up to the line
+      const box = pane ? pane.getBoundingClientRect() : { top: 0, height: innerHeight };
+      const line = box.top + box.height * 0.35;
+      let best = targets[0]?.id ?? '';
+      for (const t of targets) if (t.getBoundingClientRect().top <= line) best = t.id;
+      return best;
+    };
+    const update = () => {
+      const best = current();
+      if (pending) {
+        if (best !== pending) return; // still travelling: keep showing the clicked tab
+        pending = null;
+        window.clearTimeout(safety);
+      }
+      setCurrent(best);
+    };
+    refresh = update;
+    scroller.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    detach = () => { scroller.removeEventListener('scroll', update); window.removeEventListener('resize', update); };
+    update();
+  }
+  if (targets.length) {
+    init();
+    deviceMode.addEventListener('change', init);
+  }
+</script>
+
+<style>
+  .tabs { padding: .3rem; border-radius: 999px; }
+  ul { position: relative; z-index: 1; list-style: none; padding: 0; display: flex; gap: 0; }
+  a {
+    display: inline-flex; align-items: center; min-height: 40px; padding: 0 .95rem;
+    font-size: var(--t-xs); font-weight: 500; color: var(--muted); border-radius: 999px;
+    transition: color .25s;
+  }
+  a:hover, a[aria-current] { color: var(--ink); }
+  a[aria-current] { font-weight: 600; }
+  .lens {
+    position: absolute; z-index: 0; left: 0; top: .3rem; height: 40px; width: 0; opacity: 0;
+    margin-left: .3rem; border-radius: 999px;
+    background: rgb(255 255 255 / .7);
+    box-shadow: 0 1px 4px -1px rgb(0 0 0 / .15), inset 0 1px 0 rgb(255 255 255 / .9);
+    transition: transform .5s cubic-bezier(.3, 1.35, .5, 1), width .5s cubic-bezier(.3, 1.35, .5, 1), opacity .25s;
+  }
+  @media (prefers-color-scheme: dark) { .lens { background: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .12); } }
+
+  /* Phones / tablets: floats at the bottom of the page */
+  .tabs { position: fixed; z-index: 50; left: 50%; bottom: calc(.75rem + env(safe-area-inset-bottom)); translate: -50% 0; }
+  @media (max-width: 360px) { a { padding: 0 .6rem; } }
+
+  /* Unfolded: floats over the content at the bottom of the inner screen's right half */
+  @media (min-width: 1000px) and (min-height: 640px) {
+    .tabs { position: absolute; z-index: 8; bottom: 1.6rem; }
+  }
+</style>

@@ -1,0 +1,69 @@
+---
+// A Live Activity–style card on the cover screen: cycles through the Currently items; links to #now.
+// While the assistant is listening, thinking, or speaking, it turns into a waveform (driven by src/scripts/assistant.ts).
+// (iPhone Duo has no Dynamic Island: its outer camera is a punch-hole, and it uses Touch ID.)
+import { now } from '../data/now';
+import { showPlaceholders } from '../lib/env';
+const items = now.filter((i) => i.confirmed || showPlaceholders).map((i) => i.short);
+---
+<a class="island glass" href="/#now" aria-label={`Currently: ${items.join('; ')}`} data-island data-ai-indicator data-ai-state="idle">
+  <span class="now">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="kicker" aria-hidden="true">Now</span>
+    <span class="slot" aria-hidden="true">
+      {items.map((t, i) => <span class={`item${i === 0 ? ' on' : ''}`}>{t}</span>)}
+    </span>
+  </span>
+  <span class="ai" aria-hidden="true">
+    <span class="ai-wave" data-ai-level><i></i><i></i><i></i><i></i><i></i></span>
+    <span class="ai-label" data-ai-label></span>
+  </span>
+</a>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll<HTMLElement>('[data-island]').forEach((el) => {
+    const items = [...el.querySelectorAll<HTMLElement>('.item')];
+    if (reduce || items.length < 2) return;
+    let i = 0;
+    let paused = false;
+    el.addEventListener('mouseenter', () => (paused = true));
+    el.addEventListener('mouseleave', () => (paused = false));
+    el.addEventListener('focus', () => (paused = true));
+    el.addEventListener('blur', () => (paused = false));
+    setInterval(() => {
+      if (paused || document.hidden || el.dataset.aiState !== 'idle') return;
+      items[i].classList.remove('on');
+      i = (i + 1) % items.length;
+      items[i].classList.add('on');
+    }, 3200);
+  });
+</script>
+
+<style>
+  .island {
+    display: inline-flex; align-items: center; gap: .55rem; align-self: flex-start;
+    min-height: 40px; padding: .45rem 1.05rem .45rem .85rem; border-radius: 18px;
+    color: var(--ink);
+    font-size: .8rem; font-weight: 500; letter-spacing: -.005em;
+    margin-bottom: var(--s-6);
+  }
+  /* The Now carousel and the assistant waveform share the card; the card keeps the carousel's size, so it never jumps. */
+  .now, .ai { display: inline-flex; align-items: center; gap: .55rem; transition: opacity .4s ease, transform .4s ease, filter .4s ease; }
+  .ai { position: absolute; inset: 0; justify-content: center; opacity: 0; transform: translateY(6px); filter: blur(3px); }
+  .ai-label { color: var(--ink); font-weight: 600; }
+  .island:not([data-ai-state="idle"]) .now { opacity: 0; transform: translateY(-6px); filter: blur(3px); }
+  .island:not([data-ai-state="idle"]) .ai { opacity: 1; transform: none; filter: none; }
+  .kicker { color: var(--muted); font-weight: 600; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--signal); flex: none;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 55%, transparent);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+  /* All items share one grid cell, so the card sizes to the longest and never jumps. */
+  .slot { display: grid; }
+  .item { grid-area: 1 / 1; white-space: nowrap; opacity: 0; transform: translateY(6px); filter: blur(3px); transition: opacity .45s ease, transform .45s ease, filter .45s ease; }
+  .item.on { opacity: 1; transform: none; filter: none; }
+  @media (min-width: 1000px) and (min-height: 640px) { .island { margin-bottom: 0; flex: none; } }
+</style>
