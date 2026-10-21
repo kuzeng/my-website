@@ -1,0 +1,45 @@
+# The site's AI assistant: chat API, lead capture, daily digest, and the /admin page.
+# Setup and deploy steps: see ../README.md → "AI assistant".
+name = "kuiduanzeng-assistant"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+MODEL = "claude-haiku-5-5"
+KB_URL = "https://kuiduanzeng.com/kb.json"
+ALLOWED_ORIGINS = "https://kuiduanzeng.com,https://www.kuiduanzeng.com"
+NOTIFY_EMAIL = "kuiduanz@gmail.com"
+MAIL_FROM = "Kiki <onboarding@resend.dev>"
+DAILY_LIMIT = "2000"
+# Cloudflare Access (protects /admin). Fill in after creating the Access application.
+ACCESS_TEAM_DOMAIN = ""   # e.g. "kuzeng.cloudflareaccess.com"
+ACCESS_AUD = ""           # the application's Audience (AUD) tag
+ADMIN_EMAIL = "kuiduanz@gmail.com"
+ADMIN_URL = ""            # e.g. "https://api.kuiduanzeng.com/admin", linked from the daily digest
+
+# Secrets (wrangler secret put …): ANTHROPIC_API_KEY, RESEND_API_KEY, TURNSTILE_SECRET, SESSION_SECRET
+# Local overrides live in .dev.vars (see .dev.vars.example).
+
+[[d1_databases]]
+binding = "DB"
+database_name = "assistant"
+database_id = "7ccb4088-0c68-47ab-8f4f-e071566c99a8"
+
+[[ratelimits]]
+name = "CHAT_LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+[[ratelimits]]
+name = "LEAD_LIMITER"
+namespace_id = "1002"
+  [ratelimits.simple]
+  limit = 3
+  period = 60
+
+# Daily digest of unanswered questions: 15:00 UTC = 08:00 Pacific (daylight time).
+[triggers]
+crons = ["0 15 * * *"]

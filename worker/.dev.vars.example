@@ -1,0 +1,12 @@
+# Copy to .dev.vars for `npm run dev` (never commit .dev.vars).
+ANTHROPIC_API_KEY=sk-ant-...
+# No key yet? MOCK_MODEL=1 answers with canned replies so the whole UI still works.
+# MOCK_MODEL=1
+KB_URL=http://localhost:4321/kb.json
+ALLOWED_ORIGINS=http://localhost:4321,http://localhost:4322
+# Skips the Cloudflare Access check on /admin. Local only.
+DEV_ADMIN=1
+# Optional locally: without TURNSTILE_SECRET the bot check is skipped; without RESEND_API_KEY emails are logged instead of sent.
+# RESEND_API_KEY=re_...
+# TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+# SESSION_SECRET=any-long-random-string

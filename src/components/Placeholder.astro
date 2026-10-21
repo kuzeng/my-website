@@ -1,0 +1,9 @@
+---
+import { showPlaceholders } from '../lib/env';
+interface Props { title: string; inline?: boolean }
+const { title, inline = false } = Astro.props;
+---
+{showPlaceholders && (inline
+  ? <span class="ph-tag" title={title}>{title}</span>
+  : <div class="placeholder" role="note"><strong>Placeholder · dev only</strong> — {title}<slot /></div>
+)}

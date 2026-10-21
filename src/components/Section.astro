@@ -1,0 +1,14 @@
+---
+// Section with an Apple-style two-tone heading: `title` in ink, `dek` in grey.
+interface Props { id: string; title: string; dek?: string }
+const { id, title, dek } = Astro.props;
+const headingId = `${id}-title`;
+---
+<section id={id} class="block" aria-labelledby={headingId}>
+  <div class="container">
+    <header class="sec-head">
+      <h2 class="h2" id={headingId}>{title}{dek && <> <span class="tone">{dek}</span></>}</h2>
+    </header>
+    <slot />
+  </div>
+</section>
