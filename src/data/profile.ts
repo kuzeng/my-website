@@ -12,7 +12,7 @@ export const profile = {
   headline: { lead: 'I build mobile apps.', accent: 'Next, ones that get you.' },
 
   subhead:
-    'At Intuit, I built much of the new QuickBooks Mobile home page, used by millions. Engagement doubled. Before that, I shipped the app 200+ Lululemon stores use to stay in touch with guests. Next: full-stack, AI-first, and leading teams.',
+    'At Intuit, I built much of the new QuickBooks Mobile home page, used by millions. Engagement doubled. Before that, I shipped the app 200+ Lululemon stores use to stay in touch with guests. Next: full-stack, AI-first, and leading projects.',
 
   // Optional one-line status under the hero. null = not shown.
   openTo: 'Open to interesting mobile + AI work. Say hi.' as string | null,

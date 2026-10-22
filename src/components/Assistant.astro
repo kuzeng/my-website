@@ -9,7 +9,7 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---
 {api && (
   <div class="assistant" data-assistant data-api={api} data-turnstile={turnstile} data-state="idle">
-    <button class="orb-btn glass" type="button" aria-expanded="false" aria-controls="assistant-panel" data-orb>
+    <button class="orb-btn" type="button" aria-expanded="false" aria-controls="assistant-panel" data-orb>
       <Jarvis size={30} />
       <span class="orb-label" data-i18n="cta">Ask Jarvis</span>
     </button>
@@ -62,11 +62,19 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .orb-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
-    min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 999px;
+    min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 999px; background: none;
     color: var(--ink); font: inherit; font-size: var(--t-xs); font-weight: 600; letter-spacing: -.005em; cursor: pointer;
   }
-  .orb-btn :global(.jarvis) { --size: 36px !important; }
-  .orb-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* No base: the woven ring floats on its own, a touch larger so it still reads as a button */
+  .orb-btn:hover { transform: scale(1.06); }
+  .orb-btn:active { transform: scale(.95); }
+  .orb-btn :global(.jarvis) { --size: 44px !important; }
+  /* Phones: the label sits small under the ring, so the floating ring still says what it is */
+  .orb-btn { flex-direction: column; gap: .1rem; }
+  .orb-label {
+    white-space: nowrap; font-size: .6875rem; font-weight: 500; color: var(--muted);
+    text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg); /* stays legible over page text */
+  }
 
   /* ---- Phones / tablets: a floating button above the tab bar; the panel is a bottom sheet ---- */
   .assistant { position: fixed; z-index: 60; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom) + 3.75rem); }
@@ -90,13 +98,14 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       --H: min(84vh, 860px, calc((100vw - 120px) / 1.4142)); /* same as .device in global.css */
       /* Full-width strip, centred with flex: a transform here would trap the fixed-position toast inside it. */
       position: absolute; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none;
-      bottom: max(6px, calc((100vh - var(--H)) / 4 - 22px));
+      bottom: max(6px, calc((100vh - var(--H)) / 4 - 26px));
     }
     :global(html.js) .assistant { display: flex; }
     .orb-btn, .panel, .toast { pointer-events: auto; }
-    .orb-btn { min-height: 44px; padding: 0 1.1rem 0 .45rem; }
-    .orb-btn :global(.jarvis) { --size: 30px !important; }
-    .orb-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+    /* Same icon-over-name stack as on phones, centred on the device's axis */
+    .orb-btn { min-height: 44px; padding: 0 .4rem; }
+    .orb-btn :global(.jarvis) { --size: 34px !important; }
+    .orb-label { font-size: .75rem; }
     /* Stage Manager: the chat is its own window beside the phone. assistant.ts centres the two as one group (setting
        `right`) and shrinks the phone when space runs out; `right` glides in step with the phone when it (un)folds. */
     .panel {
@@ -183,5 +192,11 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
   .toast button { min-height: 32px; padding: 0 .8rem; border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 600; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
   @media (min-width: 1000px) and (min-height: 640px) {
     .toast { top: max(8px, calc((100vh - min(84vh, 860px, calc((100vw - 120px) / 1.4142))) / 4 - 20px)); }
+  }
+  /* Short laptop screens: the strip under the phone is ~55px, so the icon-over-name stack shrinks to fit */
+  @media (min-width: 1000px) and (min-height: 640px) and (max-height: 820px) {
+    .orb-btn { min-height: 0; gap: 0; }
+    .orb-btn :global(.jarvis) { --size: 28px !important; }
+    .orb-label { font-size: .6875rem; line-height: 1.2; }
   }
 </style>
