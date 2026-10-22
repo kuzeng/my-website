@@ -19,8 +19,9 @@ export const experience: Role[] = [
     end: 'Present',
     sortKey: '2025-02',
     bullets: [
-      'Ship features across the iOS app: home-page widgets, in-app prompts, and CRM flows.',
-      'Build internal release tooling and shared, accessible UI components in SwiftUI and UIKit.',
+      'Core engineer on the QuickBooks Mobile home page redesign, used by millions — engagement rate doubled.',
+      'Ship CRM flows, in-app prompts, and shared, accessible UI components in SwiftUI and UIKit.',
+      'Built AI workflows that summarize alerts and surface critical user reviews, giving on-call engineers back ~2 hours a week.',
     ],
     stack: ['Swift', 'SwiftUI', 'UIKit', 'Accessibility', 'Crashlytics', 'Claude Code'],
   },
@@ -33,7 +34,8 @@ export const experience: Role[] = [
     end: 'May 2023',
     sortKey: '2021-10',
     bullets: [
-      'Built the iOS calling app that store associates use to talk with guests, including VoIP calls, voicemail, and offline support.',
+      'Built the iOS app store associates use to stay in touch with guests — VoIP calls, call history, voicemail playback, offline support.',
+      'Launched in 200+ stores and used by thousands of associates.',
     ],
     stack: ['Swift', 'CallKit', 'PushKit', 'Twilio Voice', 'AVFoundation', 'SQLite'],
   },
@@ -45,7 +47,7 @@ export const experience: Role[] = [
     start: 'Apr 2021',
     end: 'Sep 2021',
     sortKey: '2021-04',
-    bullets: ['Shipped claims features in USAA’s iOS and Android apps.'],
+    bullets: ['Shipped claims and roadside assistance features in USAA’s iOS and Android apps, including real-time tow-truck location updates.'],
     stack: ['Swift', 'Kotlin'],
   },
 ];

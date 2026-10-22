@@ -9,18 +9,18 @@ export const profile = {
   site: 'https://kuiduanzeng.com',
 
   // Hero statement, rendered as `lead` + grey `accent`.
-  headline: { lead: 'I build careful iOS apps.', accent: 'Next: models that run on the phone.' },
+  headline: { lead: 'I build mobile apps.', accent: 'Next, ones that get you.' },
 
   subhead:
-    'I’m an iOS engineer at Intuit. Before that I built calling and voicemail at Lululemon and claims features at USAA. I care about accessibility, test-driven architecture, and tooling that makes a team faster — and I’m exploring what to build with Apple’s on-device Foundation Models.',
+    'At Intuit, I built much of the new QuickBooks Mobile home page, used by millions. Engagement doubled. Before that, I shipped the app 200+ Lululemon stores use to stay in touch with guests. Next: full-stack, AI-first, and leading teams.',
 
   // Optional one-line status under the hero. null = not shown.
-  openTo: null as string | null,
+  openTo: 'Open to interesting mobile + AI work. Say hi.' as string | null,
 
   // Headshot: shown as a small avatar next to the name in the header.
   headshot: '/images/headshot.webp' as string | null,
   seoDescription:
-    'Kuiduan Zeng is an iOS engineer at Intuit working in Swift, SwiftUI and UIKit, building toward on-device AI. Projects, open source and experience.',
+    'Kuiduan Zeng is an iOS engineer at Intuit working in Swift, SwiftUI and UIKit, building at the intersection of mobile and AI. Projects, open source and experience.',
 };
 
 export const heroFacts = [
