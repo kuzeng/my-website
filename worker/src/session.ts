@@ -16,6 +16,17 @@ async function hmac(secret: string, data: string) {
   return b64url(await crypto.subtle.sign('HMAC', key, enc.encode(data)));
 }
 
+/**
+ * Signs an answer so /api/speak voices only text this Worker wrote (never arbitrary text on our Azure quota).
+ * Without SESSION_SECRET (local dev) there is nothing to sign with, and speak skips the check.
+ */
+export const signSpeech = (env: Env, text: string) =>
+  env.SESSION_SECRET ? hmac(env.SESSION_SECRET, `speak.${text}`) : Promise.resolve('');
+export async function verifySpeech(env: Env, text: string, token: string) {
+  if (!env.SESSION_SECRET) return true;
+  return token === (await hmac(env.SESSION_SECRET, `speak.${text}`));
+}
+
 async function verifyTurnstile(token: string, request: Request, secret: string) {
   const body = new FormData();
   body.append('secret', secret);

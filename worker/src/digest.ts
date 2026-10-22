@@ -18,7 +18,7 @@ export async function sendDigest(env: Env, adminUrl: string) {
   await notify(env, {
     subject: `${total} unanswered question${total === 1 ? '' : 's'} on your site`,
     text: [
-      'Visitors asked Kiki these in the last 24 hours, and it didn’t know the answer:',
+      'Visitors asked Jarvis these in the last 24 hours, and it didn’t know the answer:',
       '',
       ...lines,
       '',

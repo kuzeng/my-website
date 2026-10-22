@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Env } from './env';
 import { HttpError, clientIp, isChinese, json, readJson, str } from './http';
 import { systemPrompt } from './kb';
-import { requireHuman } from './session';
+import { requireHuman, signSpeech } from './session';
 
 const MAX_TURNS = 6;           // history sent to the model: the last 6 exchanges
 const MAX_MESSAGE_CHARS = 500;
@@ -115,5 +115,6 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
     ).bind(sessionId, question, reply.answer, reply.status, reply.section, triage, lang).run(),
   );
 
-  return json({ ...reply, sessionToken });
+  // speakToken lets /api/speak voice exactly this answer, and nothing else.
+  return json({ ...reply, sessionToken, speakToken: await signSpeech(env, reply.answer) });
 }

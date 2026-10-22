@@ -1,4 +1,4 @@
-// Kiki: the site's AI assistant, under the phone.
+// Jarvis: the site's AI assistant, under the phone.
 //   Desktop: opening the chat shrinks the phone to the left (Stage Manager style) so nothing is covered.
 //   Voice in: Web Speech API (SpeechRecognition), with the mic level driving the orb and the island waveform.
 //   Voice out: speechSynthesis, only for questions that were spoken (like Siri).
@@ -8,7 +8,7 @@
 
 type State = 'idle' | 'listening' | 'thinking' | 'speaking';
 type Section = 'now' | 'work' | 'ai' | 'experience' | 'skills' | 'contact' | 'none';
-type Reply = { answer: string; status: 'answered' | 'unknown' | 'declined'; section: Section; sessionToken?: string };
+type Reply = { answer: string; status: 'answered' | 'unknown' | 'declined'; section: Section; sessionToken?: string; speakToken?: string };
 type Turn = { role: 'user' | 'assistant'; content: string };
 
 const root = document.querySelector<HTMLElement>('[data-assistant]');
@@ -33,9 +33,9 @@ function init(root: HTMLElement) {
   const lang: 'zh' | 'en' = navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
   const T = {
     en: {
-      cta: 'Ask Kiki', title: 'Kiki', subtitle: 'Kuiduan’s AI sidekick · answers from what he’s shared',
-      intro: 'Hi, I’m Kiki! Ask me about Kuiduan’s work, projects, or what he’s up to. I only know what he’s told me, so I might not know everything.',
-      label: 'Your question', placeholder: 'Ask Kiki about Kuiduan…', fine: 'Questions are saved to improve the answers.',
+      cta: 'Ask Jarvis', title: 'Jarvis', subtitle: 'Kuiduan’s AI assistant · answers from what he’s shared',
+      intro: 'Good day. I’m Jarvis, Kuiduan’s assistant. Ask me about his work, his projects, or what he’s building at the moment. I only know what he’s shared with me, so a few things may be beyond me.',
+      label: 'Your question', placeholder: 'Ask Jarvis about Kuiduan…', fine: 'Questions are saved to improve the answers.',
       close: 'Close', mic: 'Ask with your voice', send: 'Send', undo: 'Undo',
       listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking',
       shown: 'Showing', see: (s: string) => `See ${s} on the page`,
@@ -46,9 +46,9 @@ function init(root: HTMLElement) {
       sections: { now: 'Now', work: 'Selected work', ai: 'Building with AI', experience: 'Experience', skills: 'Toolkit', contact: 'Contact' },
     },
     zh: {
-      cta: '问问 Kiki', title: 'Kiki', subtitle: 'Kuiduan 的 AI 小助手 · 根据他分享的资料回答',
-      intro: '嗨，我是 Kiki！可以问我 Kuiduan 的工作、项目，或者他最近在忙什么。我只知道他告诉过我的事，所以不一定什么都知道哦。',
-      label: '你的问题', placeholder: '问问 Kiki 关于 Kuiduan 的事…', fine: '提问会被记录，用于改进回答。',
+      cta: '问问 Jarvis', title: 'Jarvis', subtitle: 'Kuiduan 的 AI 助手 · 根据他分享的资料回答',
+      intro: '您好，我是 Jarvis，Kuiduan 的 AI 助手。可以问我他的工作、项目，或者最近在做什么。我只知道他分享过的内容，有些问题可能答不上来。',
+      label: '你的问题', placeholder: '问问 Jarvis 关于 Kuiduan 的事…', fine: '提问会被记录，用于改进回答。',
       close: '关闭', mic: '语音提问', send: '发送', undo: '撤销',
       listening: '正在听…', thinking: '思考中…', speaking: '回答中',
       shown: '已跳到', see: (s: string) => `在页面中查看「${s}」`,
@@ -102,11 +102,9 @@ function init(root: HTMLElement) {
   const buf = new Uint8Array(256);
   function tick(t: number) {
     if (state === 'listening' && analyser) {
-      analyser.getByteTimeDomainData(buf);
-      let sum = 0;
-      for (const v of buf) sum += (v - 128) ** 2;
-      const rms = Math.sqrt(sum / buf.length) / 128; // 0..~0.5 for speech
-      level += (Math.min(1, rms * 4) - level) * 0.35;
+      level += (Math.min(1, rmsOf(analyser) * 4) - level) * 0.35;
+    } else if (state === 'speaking' && speechAnalyser) {
+      level += (Math.min(1, rmsOf(speechAnalyser) * 3.2) - level) * 0.35; // Jarvis's real voice (Azure audio)
     } else if (state === 'speaking') {
       // speechSynthesis exposes no audio, so the waveform "talks" with a gentle synthetic level.
       level = 0.35 + 0.3 * Math.abs(Math.sin(t / 110) * Math.sin(t / 370));
@@ -115,6 +113,12 @@ function init(root: HTMLElement) {
     }
     paintLevel(level);
     raf = requestAnimationFrame(tick);
+  }
+  function rmsOf(an: AnalyserNode) {
+    an.getByteTimeDomainData(buf);
+    let sum = 0;
+    for (const v of buf) sum += (v - 128) ** 2;
+    return Math.sqrt(sum / buf.length) / 128; // 0..~0.5 for speech
   }
   function paintLevel(v: number) {
     levelEls().forEach((el) => el.style.setProperty('--lvl', v.toFixed(3)));
@@ -166,7 +170,7 @@ function init(root: HTMLElement) {
     layoutStage();
     orbBtn.setAttribute('aria-expanded', 'false');
     stopListening();
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    stopSpeaking();
     setState('idle');
     orbBtn.focus({ preventScroll: true });
   }
@@ -211,7 +215,7 @@ function init(root: HTMLElement) {
   async function ask(raw: string, spoken: boolean) {
     const question = raw.trim().slice(0, 500);
     if (!question || state === 'thinking') return;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    stopSpeaking();
     chips.replaceChildren();
     intro.hidden = true;
     input.value = '';
@@ -227,7 +231,7 @@ function init(root: HTMLElement) {
       showSection(reply.section);
       if (reply.status !== 'answered' && !leadSent) addLeadForm(question);
       scrollLog();
-      if (spoken) speak(reply.answer);
+      if (spoken) speak(reply.answer, reply.speakToken);
       else setState('idle');
     } catch (err) {
       history.pop(); // let them ask the same thing again
@@ -405,7 +409,11 @@ function init(root: HTMLElement) {
 
   function startListening() {
     if (state === 'thinking') return;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    stopSpeaking();
+    // A spoken question gets a spoken answer: start the playback context now, inside the click, so the browser lets it
+    // run when the answer arrives seconds later.
+    voiceCtx ??= new AudioContext();
+    void voiceCtx.resume().catch(() => {});
     // Start recognising first, synchronously inside the click, so listening begins (and shows) at once.
     recognition = new Recognition();
     recognition.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
@@ -467,37 +475,96 @@ function init(root: HTMLElement) {
     analyser = null;
   }
 
-  // Kiki's voice: a bright, young-sounding voice, pitched up a little and a touch quicker.
-  // Browsers only offer the voices installed on the device, so this is a preference list, not a guarantee.
-  const KIKI_VOICES: Record<string, RegExp[]> = {
-    en: [/samantha/i, /\bava\b/i, /\bzoe\b/i, /\bflo\b/i, /shelley/i, /google us english/i, /\b(jenny|aria|ana)\b/i, /female/i],
-    zh: [/meijia|美佳/i, /tingting|ting-ting|婷婷/i, /lili|莉莉/i, /xiaoxiao|晓晓/i, /google 普通话|google.*mandarin/i, /female/i],
-  };
-  const KIKI_PITCH = 1.3; // 1 = the voice's normal pitch; much higher starts to sound robotic
-  const KIKI_RATE = 1.08;
+  // Jarvis's voice. First choice: Azure neural TTS through the Worker (/api/speak), the same composed British voice
+  // for every visitor. It only voices answers the Worker signed (speakToken). Any failure, or no Azure key configured,
+  // falls back to the browser's own voices.
+  let voiceAudio: HTMLAudioElement | null = null;
+  let voiceCtx: AudioContext | null = null;
+  let speechAnalyser: AnalyserNode | null = null;
 
-  function speak(text: string) {
+  function stopSpeaking() {
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    voiceAudio?.pause();
+    voiceAudio = null;
+    speechAnalyser = null;
+  }
+
+  async function speak(text: string, token?: string) {
+    if (token !== undefined) {
+      try {
+        if (await speakNeural(text, token)) return;
+      } catch { /* fall through to the browser voice */ }
+    }
+    speakBrowser(text);
+  }
+
+  async function speakNeural(text: string, token: string): Promise<boolean> {
+    const res = await fetch(`${api}/api/speak`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, token }),
+    });
+    if (!res.ok) return false;
+    const url = URL.createObjectURL(await res.blob());
+    const audio = new Audio(url);
+    voiceAudio = audio;
+    // Route through an analyser so the avatar's core follows the real voice; play directly if audio is still locked.
+    // resume() never settles in a context the browser hasn't allowed to start, so never wait on it for long.
+    voiceCtx ??= new AudioContext();
+    await Promise.race([voiceCtx.resume().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
+    if (voiceCtx.state === 'running') {
+      const an = voiceCtx.createAnalyser();
+      an.fftSize = 512;
+      voiceCtx.createMediaElementSource(audio).connect(an);
+      an.connect(voiceCtx.destination);
+      speechAnalyser = an;
+    }
+    const done = () => {
+      URL.revokeObjectURL(url);
+      if (voiceAudio === audio) { voiceAudio = null; speechAnalyser = null; }
+      if (state === 'speaking') setState('idle');
+    };
+    audio.onplaying = () => setState('speaking');
+    audio.onended = done;
+    audio.onerror = done;
+    await audio.play();
+    return true;
+  }
+
+  // Browser fallback: a composed British male where the device has one (Edge's Ryan Natural, macOS's Daniel).
+  // Browsers only offer the voices installed on the device, so this is a preference list, not a guarantee.
+  const JARVIS_VOICES: Record<string, RegExp[]> = {
+    en: [/\bryan\b/i, /\bthomas\b/i, /\bdaniel\b/i, /\boliver\b/i, /\barthur\b/i, /google uk english male/i, /\bguy\b/i, /\bmale\b/i],
+    zh: [/yunze|云泽/i, /yunjian|云健/i, /yunyang|云扬/i, /yunxi|云希/i, /google 普通话|google.*mandarin/i, /tingting|ting-ting|婷婷/i, /meijia|美佳/i],
+  };
+  // Quality beats name: Edge's Natural (neural) voices and Apple's Premium/Enhanced downloads sound close to human;
+  // Google's online voices are decent; the rest are the old compact voices.
+  const voiceQuality = (v: SpeechSynthesisVoice) =>
+    /natural|neural|premium/i.test(v.name) ? 3 : /enhanced/i.test(v.name) ? 2 : /^google/i.test(v.name) ? 1 : 0;
+  // macOS novelty voices: never Jarvis.
+  const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley/i;
+  // Natural pitch: pitch-shifting is what makes browser voices sound robotic.
+  const JARVIS_PITCH = 1;
+  const JARVIS_RATE = 0.98;
+
+  function speakBrowser(text: string) {
     if (!('speechSynthesis' in window)) return setState('idle');
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = /[\u3400-\u9fff]/.test(text) ? 'zh-CN' : 'en-US';
+    u.lang = /[\u3400-\u9fff]/.test(text) ? 'zh-CN' : 'en-GB';
     const voice = pickVoice(u.lang);
     if (voice) u.voice = voice;
-    u.pitch = KIKI_PITCH;
-    u.rate = KIKI_RATE;
+    u.pitch = JARVIS_PITCH;
+    u.rate = JARVIS_RATE;
     u.onstart = () => setState('speaking');
     u.onend = u.onerror = () => { if (state === 'speaking') setState('idle'); };
     speechSynthesis.speak(u);
   }
   function pickVoice(langTag: string) {
     const prefix = langTag.slice(0, 2);
-    const voices = speechSynthesis.getVoices().filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith(prefix));
-    // Enhanced / Premium downloads of the same voice sound far more natural, so try those first.
-    const ranked = [...voices].sort((a, b) => Number(/enhanced|premium|neural|natural/i.test(b.name)) - Number(/enhanced|premium|neural|natural/i.test(a.name)));
-    for (const pattern of KIKI_VOICES[prefix] ?? []) {
-      const match = ranked.find((v) => pattern.test(v.name));
-      if (match) return match;
-    }
-    return ranked.find((v) => v.localService) ?? ranked[0];
+    const voices = speechSynthesis.getVoices()
+      .filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith(prefix) && !NOVELTY.test(v.name));
+    // Best quality tier first; within it, Jarvis's preferred names; then any voice in that tier.
+    const prefs = JARVIS_VOICES[prefix] ?? [];
+    const pref = (v: SpeechSynthesisVoice) => { const i = prefs.findIndex((p) => p.test(v.name)); return i < 0 ? prefs.length : i; };
+    return [...voices].sort((a, b) => voiceQuality(b) - voiceQuality(a) || pref(a) - pref(b))[0];
   }
   if ('speechSynthesis' in window) speechSynthesis.getVoices(); // Chrome loads the voice list lazily
 }

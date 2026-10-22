@@ -10,3 +10,6 @@ DEV_ADMIN=1
 # RESEND_API_KEY=re_...
 # TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 # SESSION_SECRET=any-long-random-string
+# Jarvis's voice: Azure Speech (free tier F0). Without these the page falls back to the browser's voice.
+# AZURE_SPEECH_KEY=...
+# AZURE_SPEECH_REGION=eastus

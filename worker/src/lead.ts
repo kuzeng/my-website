@@ -42,7 +42,7 @@ export async function handleLead(request: Request, env: Env, ctx: ExecutionConte
       subject: `New contact from your site: ${who}`,
       replyTo: email,
       text: [
-        `${who} left their email after asking Kiki a question on your site.`,
+        `${who} left their email after asking Jarvis a question on your site.`,
         '',
         `Email:    ${email}`,
         `Name:     ${name ?? '-'}`,
