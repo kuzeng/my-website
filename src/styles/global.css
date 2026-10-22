@@ -161,8 +161,8 @@ a { color: inherit; text-decoration: none; }
    Phones/tablets/no-device get a normal page: the device wrappers collapse (display: contents). */
 @property --p { syntax: "<number>"; inherits: true; initial-value: 0; }
 
-.hw, .unfold { display: none; }
-.flap, .face, .half, .bezel, .screen { display: contents; }
+.hw, .unfold, .spot { display: none; }
+.rig, .flap, .face, .half, .bezel, .screen { display: contents; }
 .pane-right, .pane-left, .cover-screen { container-type: inline-size; }
 
 @media (min-width: 1000px) and (min-height: 640px) {
@@ -182,7 +182,8 @@ a { color: inherit; text-decoration: none; }
     --p: 0;                                      /* 0 = folded, 1 = open */
     position: relative; width: calc(2 * var(--W)); height: var(--H);
     perspective: 3200px;
-    transform: translateX(calc((1 - var(--p)) * var(--W) / -2));
+    /* Mid-fold the phone lifts toward you a little, then settles back (perspective comes from .rig). */
+    transform: translateX(calc((1 - var(--p)) * var(--W) / -2)) translateZ(calc(sin(var(--p) * 180deg) * 40px));
     transition: --p .95s cubic-bezier(.62, 0, .22, 1), scale .6s cubic-bezier(.3, 1, .4, 1), translate .6s cubic-bezier(.3, 1, .4, 1);
   }
   .device.opening, .device.is-open { --p: 1; }
@@ -237,6 +238,8 @@ a { color: inherit; text-decoration: none; }
     content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; background: #000;
     opacity: calc((1 - var(--p)) * .6);
   }
+  /* The flap's shadow is deepest at the hinge, where it is closest to the screen. */
+  .half-r .screen::after { background: linear-gradient(90deg, #000, rgb(0 0 0 / .62) 55%, rgb(0 0 0 / .45)); }
   .device.is-open .half-r .screen::after, .device.is-open .front .screen::after { display: none; }
   /* The fold line: Apple calls the inner display "wonderfully flat", so barely there. */
   .device.is-open .half-r .screen::before {
@@ -296,6 +299,69 @@ a { color: inherit; text-decoration: none; }
   .side-btn { z-index: 0; left: calc(2 * var(--W) - 1px); top: 24%; width: 4px; height: 9%; border-radius: 0 3px 3px 0; background: var(--chassis); box-shadow: 0 0 0 1px var(--rim); }
   .top-btns { z-index: 0; top: -3px; left: calc(var(--W) * 1.52); width: calc(var(--W) * .2); height: 4px; border-radius: 3px 3px 0 0;
     background: linear-gradient(90deg, var(--chassis) 0 46%, transparent 46% 54%, var(--chassis) 54%); filter: drop-shadow(0 0 .5px var(--rim)) drop-shadow(0 0 .5px var(--rim)); }
+
+  /* ---- Depth & motion ---- */
+  /* .rig holds the device so src/scripts/tilt.ts can tilt it toward the pointer (inline transform) without touching
+     .device, whose transform centres the fold and whose scale/translate belong to the assistant's Stage Manager.
+     Performance: everything tilt.ts moves is its own compositor layer (will-change), so pointer motion never repaints,
+     and nothing animates while the pointer rests. No box-reflect: it re-rendered the whole phone, glass and all, every frame. */
+  .stage { perspective: 2000px; }
+  .rig {
+    display: block; position: relative; perspective: 2400px; will-change: transform;
+    animation: rig-in 1.1s cubic-bezier(.2, .9, .25, 1);
+  }
+  /* Arrives from below, rotating up into place. Individual properties only, so the tilt's transform is untouched. */
+  @keyframes rig-in { from { opacity: 0; translate: 0 8vh; rotate: x 18deg; scale: .94; } }
+
+  /* A soft light on the desk that follows the pointer */
+  .spot {
+    display: block; position: fixed; z-index: -1; left: 50%; top: 50%; width: 80vmax; height: 80vmax; margin: -40vmax 0 0 -40vmax;
+    border-radius: 50%; pointer-events: none; will-change: translate;
+    background: radial-gradient(closest-side, rgb(255 255 255 / .5), rgb(255 255 255 / .16) 45%, transparent);
+  }
+
+  /* Thickness: a titanium slab behind the visible body. tilt.ts nudges it away from the tilt, so the side wall shows
+     and the cast shadow moves. Folded it sits behind the right half (the part you can see); open, behind both. */
+  .slab {
+    z-index: -1; top: 0; left: var(--W); width: var(--W); height: var(--H); will-change: translate;
+    border-radius: var(--rh) var(--r) var(--r) var(--rh);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--chassis) 60%, var(--rim)), color-mix(in srgb, var(--rim) 80%, #000));
+    box-shadow: 0 0 0 1px var(--rim), 0 60px 90px -40px rgb(0 0 0 / .4);
+  }
+  .device.is-open .slab { left: 0; width: calc(2 * var(--W)); border-radius: var(--r); }
+
+  /* Specular glare over the glass, following the pointer; fades out while the hinge moves. */
+  .glare {
+    z-index: 10; top: 0; left: var(--W); width: var(--W); height: var(--H); overflow: hidden;
+    border-radius: var(--rh) var(--r) var(--r) var(--rh);
+    opacity: calc(pow(cos(var(--p) * 180deg), 2));
+  }
+  .device.is-open .glare { left: 0; width: calc(2 * var(--W)); border-radius: var(--r); opacity: .5; }
+  .glare i {
+    position: absolute; left: -50%; top: -50%; width: 200%; height: 200%; will-change: translate;
+    background: radial-gradient(closest-side, rgb(255 255 255 / .16), rgb(255 255 255 / .05) 45%, transparent 70%);
+  }
+
+  /* A sheen sweeps across the moving flap, strongest mid-fold. Moved with translate (compositor), never repainted. */
+  .back .screen::before, .front .screen::before {
+    content: ""; position: absolute; z-index: 11; top: 0; bottom: 0; left: 0; width: 60%; pointer-events: none; will-change: translate;
+    background: linear-gradient(105deg, transparent, rgb(255 255 255 / .28) 50%, transparent);
+    translate: calc((var(--p) * 2.67 - 1) * 100%) 0;
+    opacity: sin(var(--p) * 180deg);
+  }
+  .device.is-open .front .screen::before { display: none; }
+
+  /* When the halves meet, the hinge lands with a small spring, like a magnet catching. */
+  .device.is-open .flap { animation: hinge-snap .5s ease-out; }
+  .device.no-anim .flap { animation: none; }
+  @keyframes hinge-snap {
+    35% { transform: rotateY(-2.5deg); }
+    70% { transform: rotateY(.8deg); }
+  }
+}
+@media (min-width: 1000px) and (min-height: 640px) and (prefers-color-scheme: dark) {
+  .spot { background: radial-gradient(closest-side, rgb(255 255 255 / .06), rgb(255 255 255 / .02) 45%, transparent); }
+  .glare i { background: radial-gradient(closest-side, rgb(255 255 255 / .07), rgb(255 255 255 / .02) 45%, transparent 70%); }
 }
 
 /* ---------- Liquid Glass ---------- */

@@ -122,22 +122,29 @@ function init(root: HTMLElement) {
 
   // ---------- Stage Manager (desktop): shrink the phone into the space left of the chat window ----------
   const device = document.getElementById('device');
-  const MARGIN = 32; // px around the phone and between it and the chat
+  const MARGIN = 32; // px between the windows and the screen edges
+  const GAP = 48;    // px between the phone and the chat: close enough to read as one workspace
   function layoutStage() {
     if (!device) return;
     if (panel.hidden || !deviceMode.matches) {
       device.style.removeProperty('scale');
       device.style.removeProperty('translate');
+      panel.style.removeProperty('right');
       return;
     }
     const open = device.classList.contains('is-open') || device.classList.contains('opening');
     const W = device.offsetWidth / 2;          // one screen; layout size, unaffected by transforms
     const visible = open ? 2 * W : W;          // folded, only the cover screen shows (centred by fold.ts's transform)
-    const avail = innerWidth - panel.offsetWidth - MARGIN * 3;
+    const panelW = panel.offsetWidth;
+    const avail = innerWidth - panelW - MARGIN * 2 - GAP;
     const scale = Math.min(1, avail / visible, (innerHeight - MARGIN * 2) / device.offsetHeight);
-    const shift = MARGIN + avail / 2 - innerWidth / 2;
+    // Phone and chat sit side by side as one group, centred on screen; on narrow screens the group fills the width.
+    const phoneW = visible * scale;
+    const left = Math.max(MARGIN, (innerWidth - (phoneW + GAP + panelW)) / 2);
+    const shift = left + phoneW / 2 - innerWidth / 2;
     device.style.setProperty('scale', scale.toFixed(3));
     device.style.setProperty('translate', `${Math.round(shift)}px 0`);
+    panel.style.setProperty('right', `${Math.round(Math.max(MARGIN, innerWidth - left - phoneW - GAP - panelW))}px`);
   }
   if (device) new MutationObserver(layoutStage).observe(device, { attributes: true, attributeFilter: ['class'] });
   window.addEventListener('resize', layoutStage);
@@ -390,49 +397,64 @@ function init(root: HTMLElement) {
 
   micBtn.addEventListener('click', () => (recognition ? stopListening() : startListening()));
 
-  async function startListening() {
+  // Continuous recognition with our own end-of-speech: the browser's built-in endpointing (continuous = false)
+  // stops at the first short pause, which cut people off mid-thought.
+  const END_SILENCE_MS = 1200; // quiet this long after speaking → done
+  const NO_SPEECH_MS = 8000;   // nothing said at all → give up
+  let silenceTimer = 0;
+
+  function startListening() {
     if (state === 'thinking') return;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
-    // A parallel mic stream feeds the level meter; recognition still works if this is refused.
-    try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioCtx = new AudioContext();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-      audioCtx.createMediaStreamSource(micStream).connect(analyser);
-    } catch (err) {
-      if ((err as DOMException).name === 'NotAllowedError') {
-        addMessage('bot', T.errors.mic).classList.add('error');
-        return;
-      }
-    }
+    // Start recognising first, synchronously inside the click, so listening begins (and shows) at once.
     recognition = new Recognition();
     recognition.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
     recognition.interimResults = true;
-    recognition.continuous = false;
-    let finalText = '';
+    recognition.continuous = true;
+    let heard = ''; // everything recognised so far, final and interim
+    const armSilence = (ms: number) => {
+      window.clearTimeout(silenceTimer);
+      silenceTimer = window.setTimeout(stopListening, ms);
+    };
     recognition.onresult = (e: any) => {
       let text = '';
-      for (const r of e.results) {
-        text += r[0].transcript;
-        if (r.isFinal) finalText = text;
-      }
+      for (const r of e.results) text += r[0].transcript;
+      heard = text;
       input.value = text;
+      armSilence(END_SILENCE_MS);
     };
     recognition.onerror = (e: any) => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') addMessage('bot', T.errors.mic).classList.add('error');
     };
     recognition.onend = () => {
+      window.clearTimeout(silenceTimer);
       releaseMic();
-      if (finalText.trim()) ask(finalText, true);
+      if (heard.trim()) ask(heard.trim(), true);
       else if (state === 'listening') setState('idle');
     };
     micBtn.setAttribute('aria-pressed', 'true');
     setState('listening');
     recognition.start();
+    armSilence(NO_SPEECH_MS);
+    startLevelMeter();
+  }
+
+  // A parallel mic stream feeds the level meter only. It opens in the background so it never delays listening,
+  // and recognition works without it. The AudioContext is created inside the click so browsers let it run.
+  function startLevelMeter() {
+    const ctx = new AudioContext();
+    audioCtx = ctx;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      if (audioCtx !== ctx) return stream.getTracks().forEach((t) => t.stop()); // already finished listening
+      micStream = stream;
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+    }, () => { /* no meter; recognition reports a blocked mic itself */ });
   }
 
   function stopListening() {
+    window.clearTimeout(silenceTimer);
     recognition?.stop(); // onend sends whatever was heard
   }
   function releaseMic() {

@@ -63,7 +63,10 @@ const jsonLd = {
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="stage">
+      <div class="spot" aria-hidden="true"></div>
+      <div class="rig" id="rig">
       <div class="device is-open" id="device">
+        <span class="hw slab" aria-hidden="true"></span>
         <div class="flap">
           <!-- Outer display (what you see folded) -->
           <div class="face back" id="cover">
@@ -116,6 +119,8 @@ const jsonLd = {
         <span class="hw home-inner" aria-hidden="true"></span>
         <span class="hw side-btn" aria-hidden="true"></span>
         <span class="hw top-btns" aria-hidden="true"></span>
+        <span class="hw glare" aria-hidden="true"><i></i></span>
+      </div>
       </div>
       <Assistant />
     </div>
@@ -133,6 +138,7 @@ const jsonLd = {
     </script>
     <script>
       import '../scripts/fold';
+      import '../scripts/tilt';
     </script>
   </body>
 </html>

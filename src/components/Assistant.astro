@@ -97,13 +97,15 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
     .orb-btn { min-height: 44px; padding: 0 1.1rem 0 .45rem; }
     .orb-btn :global(.kiki) { --size: 30px !important; }
     .orb-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
-    /* Stage Manager: the chat is its own window on the right; assistant.ts shrinks the phone into the space on the left. */
+    /* Stage Manager: the chat is its own window beside the phone. assistant.ts centres the two as one group (setting
+       `right`) and shrinks the phone when space runs out; `right` glides in step with the phone when it (un)folds. */
     .panel {
       position: fixed; left: auto; right: 2rem; bottom: auto; top: 50%; translate: 0 -50%;
       width: clamp(320px, 30vw, 400px); height: min(680px, calc(100vh - 6rem)); max-height: none;
       padding: 1rem 1rem .7rem;
       transform-origin: 100% 50%;
       animation: slide-in .5s cubic-bezier(.3, 1.2, .4, 1);
+      transition: right .6s cubic-bezier(.3, 1, .4, 1), box-shadow .3s ease, background-color .3s ease;
     }
     @keyframes slide-in { from { opacity: 0; transform: translateX(40px) scale(.96); filter: blur(6px); } }
   }
