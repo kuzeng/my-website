@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: withastro/action@v3
         with:
-          node-version: 20
+          node-version: 24 # Astro 7 needs Node >= 22.23
 
   deploy:
     needs: build
