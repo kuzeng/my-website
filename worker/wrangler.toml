@@ -19,13 +19,13 @@ DAILY_LIMIT = "2000"
 # Cloudflare Access (protects /admin and /api/admin/*).
 ACCESS_TEAM_DOMAIN = "lingering-mud-f00c.cloudflareaccess.com"
 ACCESS_AUD = "39ec3f8705f39a09a3755571a1b4693dbf928616e2a51faef4a7b67208bc226c"   # the Access application's Audience (AUD) tag
-ADMIN_EMAIL = "kuiduanz@gmail.com"
 ADMIN_URL = "https://api.kuiduanzeng.com/admin"   # linked from the daily digest
 # Jarvis's voice (Azure neural TTS). A composed British male; a calm Mandarin male for Chinese answers.
 VOICE_EN = "en-GB-RyanNeural"
 VOICE_ZH = "zh-CN-YunzeNeural"
 
 # Secrets (wrangler secret put …): ANTHROPIC_API_KEY, RESEND_API_KEY, TURNSTILE_SECRET, SESSION_SECRET,
+# ADMIN_EMAIL (the email you log in to Access with; a secret so it stays out of this public repo),
 # AZURE_SPEECH_KEY, AZURE_SPEECH_REGION (optional: without them Jarvis speaks with the browser's voice)
 # Local overrides live in .dev.vars (see .dev.vars.example).
 

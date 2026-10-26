@@ -22,7 +22,7 @@ async function accessKeys(team: string): Promise<Jwk[]> {
 async function requireAdmin(request: Request, env: Env): Promise<void> {
   const { hostname } = new URL(request.url);
   if (env.DEV_ADMIN === '1' && (hostname === 'localhost' || hostname === '127.0.0.1')) return;
-  if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) throw new HttpError(403, 'access_not_configured', 'Set up Cloudflare Access for /admin first.');
+  if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD || !env.ADMIN_EMAIL) throw new HttpError(403, 'access_not_configured', 'Set up Cloudflare Access for /admin first.');
 
   const token = request.headers.get('cf-access-jwt-assertion');
   const parts = token?.split('.') ?? [];
@@ -41,7 +41,7 @@ async function requireAdmin(request: Request, env: Env): Promise<void> {
     !aud.includes(env.ACCESS_AUD) ||
     payload.iss !== `https://${env.ACCESS_TEAM_DOMAIN}` ||
     Number(payload.exp) * 1000 < Date.now() ||
-    (env.ADMIN_EMAIL && email !== env.ADMIN_EMAIL.toLowerCase())
+    email !== env.ADMIN_EMAIL.toLowerCase()
   ) {
     throw new HttpError(403, 'forbidden');
   }

@@ -12,7 +12,6 @@ export interface Env {
   DAILY_LIMIT: string;
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
-  ADMIN_EMAIL: string;
   ADMIN_URL: string;
   VOICE_EN: string; // Azure neural voice names for Jarvis
   VOICE_ZH: string;
@@ -22,6 +21,7 @@ export interface Env {
   RESEND_API_KEY?: string;
   TURNSTILE_SECRET?: string;
   SESSION_SECRET?: string;
+  ADMIN_EMAIL?: string; // the only email allowed into /admin
   AZURE_SPEECH_KEY?: string;    // Azure Speech (free tier F0). Unset: the page uses the browser's voice
   AZURE_SPEECH_REGION?: string; // e.g. "eastus"
   DEV_ADMIN?: string; // "1" skips the Access check (local dev only)
