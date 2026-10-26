@@ -1,37 +1,58 @@
 # kuiduanzeng.com
 
-- `npm install` · `npm run dev` (local) · `npm run build` (output in `dist/`) · `npm run og` (regenerates `public/og-image.png`)
-- Content lives in `src/data/*.ts`. Design tokens live in `src/styles/global.css`.
-- **Placeholders show only in `npm run dev`** (dashed blue boxes and CONFIRM tags). Anything unconfirmed is left out of production builds:
-  - `featured.ts`: the flagship iOS + AI app. `null` means the section is absent.
-  - `ai.ts`: "Building with AI". `null` means the section is absent.
-  - `now.ts`: lines with `confirmed: false` are dropped.
-  - `profile.openTo`: `null` means no status line under the hero.
-- Avatar: drop your Memoji at `public/images/memoji.png` (square, transparent background, ~256px) and it replaces the photo automatically.
-- Layout: at ≥1000×640 the page is a folded phone (cover screen = `Hero.astro`). Slide to unfold, scroll, or follow any in-page link and it opens into a big inner screen: left half `About.astro`, right half the sections. Logic in `src/scripts/fold.ts`, geometry in `global.css`. Phones and no-JS get a normal page.
-- Deploy: GitHub Pages via `.github/workflows/deploy.yml` (set the Pages source to "GitHub Actions"). `public/CNAME` = kuiduanzeng.com.
-- The public site intentionally has no internal project details or metrics.
+My personal site, built as a foldable phone. Slide to unfold it into a two-pane screen, or ask Jarvis, an AI assistant that answers questions about me by voice or text.
 
-## AI assistant (Jarvis)
+**[kuiduanzeng.com](https://kuiduanzeng.com)** · Astro · TypeScript · Cloudflare Workers + D1 · Claude API · Azure TTS
 
-Jarvis, a composed AI butler (an original character, not affiliated with any film), behind a button under the phone. Visitors ask by voice or text; Claude Haiku 5.5 answers from `/kb.json` (built from `src/data/*.ts`, confirmed content only) plus the Q&A you write on `/admin` (not secret: a visitor can coax any of it out, so write only what you’d say publicly). Unknown questions are logged for you to answer; visitors can leave their email.
+<p>
+  <img src="docs/folded.webp" alt="Folded: the cover screen" height="360">
+  <img src="docs/unfolded.webp" alt="Unfolded: About on the left, sections on the right, Jarvis beside it" height="360">
+</p>
 
-- Front end: `src/components/Assistant.astro` + `src/scripts/assistant.ts`. Talks to the page through events: `assistant:state` (island waveform), `duo:navigate` / `duo:fold` (handled in `fold.ts`). Not rendered unless `PUBLIC_ASSISTANT_API` is set.
-- Back end: `worker/` (Cloudflare Worker + D1). `/api/chat`, `/api/lead`, `/api/speak`, `/admin`, and a daily digest cron.
-- Voice: `/api/speak` reads answers aloud with Azure neural TTS (`VOICE_EN` / `VOICE_ZH` in `wrangler.toml`), and only voices answers the Worker signed. Without an Azure key the page uses the browser's own voice.
-- Anything you put in the knowledge base can be repeated to visitors. Only write what you're happy to share.
+## Highlights
 
-**Local dev**
-1. `cd worker && npm install && cp .dev.vars.example .dev.vars` (add your `ANTHROPIC_API_KEY`, or set `MOCK_MODEL=1` for canned replies).
-2. `npm run db:init:local` once, then `npm run dev` (port 8787). Admin: http://localhost:8787/admin
-3. In the site root: `cp .env.example .env`, then `npm run dev`.
+- **Foldable layout.** At ≥1000×640 the page is a folded phone. Slide, scroll, or follow any in-page link and it unfolds: About on the left, the sections on the right. Phones and no-JS get a normal page. Logic is in `src/scripts/fold.ts`, geometry in `src/styles/global.css`.
+- **Jarvis.** Claude Haiku answers from `/kb.json` (built from the confirmed content in `src/data/*.ts`) plus Q&A I write on `/admin`. Questions it can't answer are logged and emailed to me in a daily digest, and answers can be read aloud with Azure neural TTS. Back end: a Cloudflare Worker + D1 in `worker/`.
 
-**Deploy**
+## Run locally
+
+```bash
+npm install
+npm run dev       # site
+npm run build     # output in dist/
+npm run og        # regenerate public/og-image.png
+```
+
+To run Jarvis locally too:
+
+```bash
+cd worker && npm install && cp .dev.vars.example .dev.vars   # add ANTHROPIC_API_KEY, or set MOCK_MODEL=1
+npm run db:init:local                                        # once
+npm run dev                                                  # http://localhost:8787 (admin at /admin)
+```
+
+Then in the site root run `cp .env.example .env` and `npm run dev`. The Jarvis button only renders when `PUBLIC_ASSISTANT_API` is set.
+
+## Editing content
+
+- Content lives in `src/data/*.ts`, design tokens in `src/styles/global.css`.
+- Unconfirmed content appears only in `npm run dev` (dashed boxes and CONFIRM tags) and is left out of production builds: `featured.ts` / `ai.ts` set to `null`, `now.ts` lines with `confirmed: false`, and `profile.openTo` set to `null`.
+- Everything in the knowledge base, `/admin` Q&A included, can be repeated to visitors, so write only what you'd say publicly.
+
+## Deploy
+
+The site deploys to GitHub Pages on push (`.github/workflows/deploy.yml`, with the Pages source set to "GitHub Actions"). `public/CNAME` points at kuiduanzeng.com.
+
+<details>
+<summary>Jarvis Worker setup</summary>
+
 1. `cd worker && npx wrangler login && npx wrangler d1 create assistant`, then paste the `database_id` into `wrangler.toml`.
 2. `npm run db:init:remote`.
-3. Secrets: `npx wrangler secret put ANTHROPIC_API_KEY`, then the same for `RESEND_API_KEY`, `TURNSTILE_SECRET`, and `SESSION_SECRET` (any long random string).
-4. `npm run deploy`. Note the Worker URL (or attach `api.kuiduanzeng.com` once DNS is on Cloudflare) and set `ADMIN_URL` in `wrangler.toml`.
-5. Cloudflare Zero Trust → Access → add a self-hosted application for `<worker host>/admin` and `<worker host>/api/admin/*`, allowing only your email. Put the team domain and the application's AUD tag in `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD`, then redeploy.
-6. GitHub repo → Settings → Variables: `PUBLIC_ASSISTANT_API` (the Worker URL) and `PUBLIC_TURNSTILE_SITE_KEY`. Push to deploy the site.
+3. Secrets: `npx wrangler secret put` each of `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `TURNSTILE_SECRET`, `SESSION_SECRET` (any long random string), and `ADMIN_EMAIL` (the email you sign in to Cloudflare Access with).
+4. `npm run deploy`. Attach `api.kuiduanzeng.com` (or note the Worker URL) and set `ADMIN_URL` in `wrangler.toml`.
+5. Cloudflare Zero Trust → Access: add a self-hosted app for `<worker host>/admin` and `<worker host>/api/admin/*` that allows only your email. Put the team domain and AUD tag in `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD`, then redeploy. Without these and `ADMIN_EMAIL`, `/admin` refuses every request.
+6. GitHub repo → Settings → Variables: set `PUBLIC_ASSISTANT_API` (the Worker URL) and `PUBLIC_TURNSTILE_SITE_KEY`, then push.
 7. Set a monthly spend limit in the Anthropic Console.
-8. Optional, Jarvis's voice: in the Azure portal create a Speech resource on the free F0 tier (0.5M characters a month), then `npx wrangler secret put AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` (e.g. `eastus`). Locally, put the same two lines in `worker/.dev.vars`.
+8. Optional voice: create an Azure Speech resource (free F0 tier), then `npx wrangler secret put` `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` (e.g. `eastus`). Without them the page falls back to the browser's own voice.
+
+</details>
