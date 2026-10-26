@@ -5,18 +5,22 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Served at api.kuiduanzeng.com (the zone is on this Cloudflare account; wrangler creates the DNS record and cert).
+workers_dev = false
+routes = [{ pattern = "api.kuiduanzeng.com", custom_domain = true }]
+
 [vars]
 MODEL = "claude-haiku-5-5"
 KB_URL = "https://kuiduanzeng.com/kb.json"
 ALLOWED_ORIGINS = "https://kuiduanzeng.com,https://www.kuiduanzeng.com"
 NOTIFY_EMAIL = "kuiduanz@gmail.com"
-MAIL_FROM = "Kiki <onboarding@resend.dev>"
+MAIL_FROM = "Jarvis <onboarding@resend.dev>"
 DAILY_LIMIT = "2000"
 # Cloudflare Access (protects /admin). Fill in after creating the Access application.
 ACCESS_TEAM_DOMAIN = ""   # e.g. "kuzeng.cloudflareaccess.com"
 ACCESS_AUD = ""           # the application's Audience (AUD) tag
 ADMIN_EMAIL = "kuiduanz@gmail.com"
-ADMIN_URL = ""            # e.g. "https://api.kuiduanzeng.com/admin", linked from the daily digest
+ADMIN_URL = "https://api.kuiduanzeng.com/admin"   # linked from the daily digest
 # Jarvis's voice (Azure neural TTS). A composed British male; a calm Mandarin male for Chinese answers.
 VOICE_EN = "en-GB-RyanNeural"
 VOICE_ZH = "zh-CN-YunzeNeural"
