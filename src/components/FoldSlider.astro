@@ -1,6 +1,7 @@
 ---
 // "slide to unfold": a nod to the original iPhone's "slide to unlock". Desktop device only.
 // Glass track (control layer) with a solid knob on top: iOS 26 never stacks glass on glass.
+// Sized like iOS's "slide to power off": a short, centred capsule, so a flick of the wrist is enough.
 ---
 <div class="unfold glass" data-slider="open">
   <button class="knob" type="button" data-knob aria-label="Unfold to see more about Kuiduan" aria-controls="device">
@@ -14,8 +15,8 @@
 <style>
   @media (min-width: 1000px) and (min-height: 640px) {
     .unfold {
-      display: flex; align-items: center; flex: none;
-      height: 58px; padding: 5px; border-radius: 999px;
+      display: flex; align-items: center; flex: none; align-self: center;
+      width: min(100%, 248px); height: 58px; padding: 5px; border-radius: 999px;
       touch-action: none;
     }
     .knob {
@@ -29,7 +30,7 @@
     .knob:active { cursor: grabbing; }
     :global(.device.dragging) .knob { transition: none; }
     .label {
-      position: absolute; inset: 0; display: grid; place-items: center; padding-left: 40px; pointer-events: none;
+      position: absolute; inset: 0; display: grid; place-items: center; padding-left: 52px; pointer-events: none; white-space: nowrap;
       font-size: var(--t-sm); font-weight: 500; letter-spacing: -.005em;
       color: transparent;
       background: linear-gradient(100deg, var(--muted) 0 40%, var(--ink) 50%, var(--muted) 60% 100%) 0 0 / 250% 100%;

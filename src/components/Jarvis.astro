@@ -1,0 +1,111 @@
+---
+// Jarvis, the assistant's face: ribbons of light woven into a ring, in the site's own warm greys, floating on the page.
+// Each ribbon is a tilted ellipse with a gradient stroke, orbiting at its own speed, so the bright stretches slide past
+// one another; a few motes twinkle in the hollow centre. Reacts to the assistant state on its [data-assistant]
+// ancestor: slow drift when idle, quicker and brighter while listening, a fast weave while thinking, and the ring
+// swells with the voice. --lvl (0..1, set by src/scripts/assistant.ts) drives the swell and glow.
+interface Props { size?: number }
+const { size = 30 } = Astro.props;
+---
+<span class="jarvis" style={`--size:${size}px`} aria-hidden="true" data-ai-level>
+  <svg viewBox="0 0 40 40">
+    <defs>
+      <linearGradient id="jv-rib" x1="0" y1="0" x2="1" y2="0">
+        <stop class="s0" offset="0" />
+        <stop class="s1" offset=".55" />
+        <stop class="s2" offset="1" />
+      </linearGradient>
+    </defs>
+    <!-- One golden ellipse (rx / ry = φ), five times: tilt, weight and speed make the weave. Because every ribbon shares
+         it, the ring's outer radius over its hollow radius is φ too. -->
+    <g class="ring">
+      <ellipse class="r r1" cx="20" cy="20" rx="16.8" ry="10.38" />
+      <ellipse class="r r2" cx="20" cy="20" rx="16.8" ry="10.38" />
+      <ellipse class="r r3" cx="20" cy="20" rx="16.8" ry="10.38" />
+      <ellipse class="r r4" cx="20" cy="20" rx="16.8" ry="10.38" />
+      <ellipse class="r r5" cx="20" cy="20" rx="16.8" ry="10.38" />
+    </g>
+    <g class="motes">
+      <circle cx="15" cy="17.8" r=".5" />
+      <circle cx="23.8" cy="15.8" r=".42" />
+      <circle cx="19.5" cy="23.5" r=".48" />
+      <circle cx="25.5" cy="21.8" r=".38" />
+      <circle cx="16" cy="25.1" r=".38" />
+    </g>
+  </svg>
+</span>
+
+<style>
+  .jarvis {
+    --lvl: 0;
+    /* Warm greys from the site's own ink scale */
+    --hi: 104 101 95;
+    --lo: 206 202 194;
+    --glow: 176 172 164;
+    --halo: .15; /* on a light page a grey glow reads as shadow, so keep it faint */
+    position: relative; flex: none; display: inline-block; width: var(--size); height: var(--size);
+  }
+  @media (prefers-color-scheme: dark) {
+    .jarvis {
+      --hi: 244 241 236;
+      --lo: 120 117 110;
+      --glow: 239 236 230;
+      --halo: .45;
+    }
+  }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .s0 { stop-color: rgb(var(--lo)); stop-opacity: .05; }
+  .s1 { stop-color: rgb(var(--hi)); stop-opacity: 1; }
+  .s2 { stop-color: rgb(var(--lo)); stop-opacity: .35; }
+
+  .ring {
+    transform-box: view-box; transform-origin: center; scale: calc(1 + var(--lvl) * .14); transition: scale .1s linear;
+    /* the halo also swells with the voice */
+    filter: drop-shadow(0 0 .5px rgb(var(--glow) / .8)) drop-shadow(0 0 calc(1.6px + var(--lvl) * 3px) rgb(var(--glow) / calc(var(--halo) + var(--lvl) * .3)));
+  }
+  /* Each ribbon starts at its own tilt and orbits at its own pace; alternate ones run backwards so they weave */
+  .r {
+    fill: none; stroke: url(#jv-rib); stroke-linecap: round;
+    transform-box: fill-box; transform-origin: center;
+    animation: orbit var(--t) linear infinite;
+  }
+  .r1 { --a: 0deg;   --t: 9s;  stroke-width: 1.3; }
+  .r2 { --a: 38deg;  --t: 13s; stroke-width: .9;  animation-direction: reverse; }
+  .r3 { --a: 76deg;  --t: 11s; stroke-width: 1.1; }
+  .r4 { --a: 118deg; --t: 15s; stroke-width: .7;  animation-direction: reverse; }
+  .r5 { --a: 152deg; --t: 10s; stroke-width: 1;   }
+  @keyframes orbit { from { rotate: var(--a); } to { rotate: calc(var(--a) + 360deg); } }
+
+  /* Motes twinkling in the hollow centre */
+  .motes circle { fill: rgb(var(--hi)); opacity: 0; animation: twinkle 3.4s ease-in-out infinite; }
+  .motes circle:nth-child(2) { animation-delay: .7s; }
+  .motes circle:nth-child(3) { animation-delay: 1.4s; }
+  .motes circle:nth-child(4) { animation-delay: 2.1s; }
+  .motes circle:nth-child(5) { animation-delay: 2.8s; }
+  @keyframes twinkle { 50% { opacity: .85; } }
+
+  /* Invitation: on the floating button only, while idle, a faint ripple leaves the ring every few seconds */
+  :global(.orb-btn) .jarvis::before {
+    content: ""; position: absolute; inset: 6%; border-radius: 50%; pointer-events: none;
+    border: 1px solid rgb(var(--hi) / .55); opacity: 0;
+  }
+  :global(.assistant[data-state="idle"] .orb-btn) .jarvis::before { animation: invite 7s ease-out 2s infinite; }
+  @keyframes invite {
+    0% { opacity: 0; scale: .85; }
+    4% { opacity: 1; }
+    22% { opacity: 0; scale: 1.7; }
+    100% { opacity: 0; scale: 1.7; }
+  }
+
+  /* Listening: quicker, brighter */
+  :global(.assistant[data-state="listening"]) .r { animation-duration: calc(var(--t) / 2.5); }
+  :global(.assistant[data-state="listening"]) .motes circle { animation-duration: 1.6s; }
+  /* Thinking: a fast weave */
+  :global(.assistant[data-state="thinking"]) .r { animation-duration: calc(var(--t) / 7); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .r, .motes circle, .jarvis::before { animation: none !important; }
+    .r { rotate: var(--a); }
+    .motes circle { opacity: .6; }
+  }
+</style>

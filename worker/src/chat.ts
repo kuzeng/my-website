@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Env } from './env';
 import { HttpError, clientIp, isChinese, json, readJson, str } from './http';
 import { systemPrompt } from './kb';
-import { requireHuman } from './session';
+import { requireHuman, signSpeech } from './session';
 
 const MAX_TURNS = 6;           // history sent to the model: the last 6 exchanges
 const MAX_MESSAGE_CHARS = 500;
@@ -48,7 +48,7 @@ const canned = (lang: 'zh' | 'en') => ({
 function mockReply(question: string, lang: 'zh' | 'en'): Reply {
   const q = question.toLowerCase();
   if (/salary|pay|visa|job hunt|薪|签证|找工作/.test(q)) return { answer: canned(lang).declined, status: 'declined', section: 'none' };
-  if (/intuit|lululemon|usaa|experience|work at|工作|经历/.test(q)) return { answer: '[mock] Kuiduan is an iOS engineer at Intuit; before that he built calling and voicemail at Lululemon.', status: 'answered', section: 'experience' };
+  if (/intuit|lululemon|usaa|experience|work at|工作|经历/.test(q)) return { answer: '[mock] Kuiduan is an iOS engineer at Intuit, where he built much of the new QuickBooks Mobile home page and engagement doubled; before that he shipped a calling app to 200+ Lululemon stores.', status: 'answered', section: 'experience' };
   if (/project|imagefeed|firefox|open source|项目/.test(q)) return { answer: '[mock] His main project is ImageFeedApp, a modular, test-driven iOS app he migrated to Swift 6.', status: 'answered', section: 'work' };
   if (/hello|hi\b|你好/.test(q)) return { answer: '[mock] Hi! Ask me anything about Kuiduan.', status: 'answered', section: 'none' };
   return { answer: '[mock] I don’t know that one yet. Leave your email below and he’ll answer it himself.', status: 'unknown', section: 'none' };
@@ -115,5 +115,6 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
     ).bind(sessionId, question, reply.answer, reply.status, reply.section, triage, lang).run(),
   );
 
-  return json({ ...reply, sessionToken });
+  // speakToken lets /api/speak voice exactly this answer, and nothing else.
+  return json({ ...reply, sessionToken, speakToken: await signSpeech(env, reply.answer) });
 }

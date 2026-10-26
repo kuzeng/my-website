@@ -12,12 +12,13 @@
 - Deploy: GitHub Pages via `.github/workflows/deploy.yml` (set the Pages source to "GitHub Actions"). `public/CNAME` = kuiduanzeng.com.
 - The public site intentionally has no internal project details or metrics.
 
-## AI assistant ("Ask Kuiduan")
+## AI assistant (Jarvis)
 
-A Siri-style button under the phone. Visitors ask by voice or text; Claude Haiku 5.5 answers from `/kb.json` (built from `src/data/*.ts`, confirmed content only) plus the private Q&A you write on `/admin`. Unknown questions are logged for you to answer; visitors can leave their email.
+Jarvis, a composed AI butler (an original character, not affiliated with any film), behind a button under the phone. Visitors ask by voice or text; Claude Haiku 5.5 answers from `/kb.json` (built from `src/data/*.ts`, confirmed content only) plus the private Q&A you write on `/admin`. Unknown questions are logged for you to answer; visitors can leave their email.
 
 - Front end: `src/components/Assistant.astro` + `src/scripts/assistant.ts`. Talks to the page through events: `assistant:state` (island waveform), `duo:navigate` / `duo:fold` (handled in `fold.ts`). Not rendered unless `PUBLIC_ASSISTANT_API` is set.
-- Back end: `worker/` (Cloudflare Worker + D1). `/api/chat`, `/api/lead`, `/admin`, and a daily digest cron.
+- Back end: `worker/` (Cloudflare Worker + D1). `/api/chat`, `/api/lead`, `/api/speak`, `/admin`, and a daily digest cron.
+- Voice: `/api/speak` reads answers aloud with Azure neural TTS (`VOICE_EN` / `VOICE_ZH` in `wrangler.toml`), and only voices answers the Worker signed. Without an Azure key the page uses the browser's own voice.
 - Anything you put in the knowledge base can be repeated to visitors. Only write what you're happy to share.
 
 **Local dev**
@@ -33,3 +34,4 @@ A Siri-style button under the phone. Visitors ask by voice or text; Claude Haiku
 5. Cloudflare Zero Trust → Access → add a self-hosted application for `<worker host>/admin` and `<worker host>/api/admin/*`, allowing only your email. Put the team domain and the application's AUD tag in `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD`, then redeploy.
 6. GitHub repo → Settings → Variables: `PUBLIC_ASSISTANT_API` (the Worker URL) and `PUBLIC_TURNSTILE_SITE_KEY`. Push to deploy the site.
 7. Set a monthly spend limit in the Anthropic Console.
+8. Optional, Jarvis's voice: in the Azure portal create a Speech resource on the free F0 tier (0.5M characters a month), then `npx wrangler secret put AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` (e.g. `eastus`). Locally, put the same two lines in `worker/.dev.vars`.

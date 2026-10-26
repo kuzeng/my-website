@@ -11,7 +11,7 @@ import FoldSlider from './FoldSlider.astro';
 
   <div class="intro">
     <a class="brand" href="/" aria-label={`${profile.name}, home`}>
-      <img class={`avatar${avatarIsMemoji ? ' memoji' : ''}`} src={avatarSrc} alt="" width="32" height="32" />
+      <img class={`avatar${avatarIsMemoji ? ' memoji' : ''}`} src={avatarSrc} alt="" width="44" height="44" />
       <span>{profile.name}</span>
     </a>
 
@@ -37,8 +37,9 @@ import FoldSlider from './FoldSlider.astro';
 
 <style>
   .cover { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; padding-block: var(--s-6) var(--s-8); }
-  .brand { display: inline-flex; align-items: center; gap: .6rem; font-size: var(--t-sm); font-weight: 600; letter-spacing: -.015em; }
-  .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--bg-2); box-shadow: 0 0 0 1px var(--rule); }
+  /* Golden-ratio steps down from the headline (~46px): name ≈ headline / φ² (18px), avatar ≈ name × φ² (44px). */
+  .brand { display: inline-flex; align-items: center; gap: .75rem; font-size: 1.125rem; font-weight: 600; letter-spacing: -.015em; }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--bg-2); box-shadow: 0 0 0 1px var(--rule); }
   .avatar.memoji { object-fit: contain; background: var(--chassis); }
   .headline { margin-top: var(--s-6); max-width: 20ch; }
   .lede { margin-top: var(--s-5); }
@@ -47,15 +48,24 @@ import FoldSlider from './FoldSlider.astro';
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
   .actions { margin-top: var(--s-6); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 
-  /* Folded phone: everything fits one narrow screen */
+  /* Folded phone: everything fits one narrow screen, laid out like a Lock Screen. Status (Live Activity) at the top,
+     content centred in the open space, and the slider pinned over the home indicator. Free space splits above and
+     below the content, so a short intro doesn't leave a tall empty band at the top; padding keeps a minimum gap. */
   @media (min-width: 1000px) and (min-height: 640px) {
     .cover { width: auto; margin: 0; padding: 0; display: flex; flex-direction: column; flex: 1; }
-    .intro { margin-block: auto; padding-block: var(--s-4); }
+    .intro { margin-block: auto; padding-block: var(--s-4) clamp(1.75rem, 4.5vh, 2.75rem); }
     .headline { font-size: clamp(1.75rem, min(10.5cqi, 5.4vh), 2.9rem); margin-top: clamp(1rem, 3vh, 1.75rem); }
     .lede { font-size: clamp(.9rem, 1.9vh, 1.02rem); line-height: 1.5; margin-top: clamp(.75rem, 2vh, 1.25rem); }
     .ph-wrap { font-size: .75rem; }
     .ph-wrap :global(.placeholder) { padding: .5rem .75rem; }
     .actions { margin-top: clamp(1rem, 2.6vh, 1.6rem); }
-
+  }
+  /* Short laptop screens: tighten the rhythm so the slider always stays on screen instead of scrolling away. */
+  @media (min-width: 1000px) and (min-height: 640px) and (max-height: 820px) {
+    .intro { padding-block: 0 1.25rem; }
+    .headline { margin-top: .75rem; }
+    .lede { font-size: .85rem; line-height: 1.45; margin-top: .6rem; }
+    .ph-wrap, .open-to { margin-top: .75rem; }
+    .actions { margin-top: .9rem; }
   }
 </style>

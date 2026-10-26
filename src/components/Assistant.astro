@@ -1,32 +1,32 @@
 ---
-// Kiki: the site's AI assistant. A button under the phone (bottom-right on phones).
+// Jarvis: the site's AI assistant. A button under the phone (bottom-right on phones).
 // Opening the chat on desktop is like Stage Manager: the phone shrinks to the left and the chat window sits on the right.
 // Ask by voice (Web Speech API) or by typing; answers come from the assistant Worker in worker/.
 // Not rendered until PUBLIC_ASSISTANT_API is set, so the site never shows a broken button.
-import Kiki from './Kiki.astro';
+import Jarvis from './Jarvis.astro';
 const api = import.meta.env.PUBLIC_ASSISTANT_API;
 const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---
 {api && (
   <div class="assistant" data-assistant data-api={api} data-turnstile={turnstile} data-state="idle">
-    <button class="orb-btn glass" type="button" aria-expanded="false" aria-controls="assistant-panel" data-orb>
-      <Kiki size={30} />
-      <span class="orb-label" data-i18n="cta">Ask Kiki</span>
+    <button class="orb-btn" type="button" aria-expanded="false" aria-controls="assistant-panel" data-orb>
+      <Jarvis size={30} />
+      <span class="orb-label" data-i18n="cta">Ask Jarvis</span>
     </button>
 
     <section class="panel glass" id="assistant-panel" aria-labelledby="assistant-title" hidden data-panel>
       <header class="head">
-        <Kiki size={36} />
+        <Jarvis size={36} />
         <div class="head-text">
-          <h2 id="assistant-title" data-i18n="title">Kiki</h2>
-          <p data-i18n="subtitle">Kuiduan’s AI sidekick · answers from what he’s shared</p>
+          <h2 id="assistant-title" data-i18n="title">Jarvis</h2>
+          <p data-i18n="subtitle">Kuiduan’s AI assistant · answers from what he’s shared</p>
         </div>
         <button class="icon-btn" type="button" data-close data-i18n-label="close" aria-label="Close">
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </header>
 
-      <p class="intro" data-intro data-i18n="intro">Hi, I’m Kiki! Ask me about Kuiduan’s work, projects, or what he’s up to. I only know what he’s told me, so I might not know everything.</p>
+      <p class="intro" data-intro data-i18n="intro">Good day. I’m Jarvis, Kuiduan’s assistant. Ask me about his work, his projects, or what he’s building at the moment. I only know what he’s shared with me, so a few things may be beyond me.</p>
       <ol class="log" data-log aria-live="polite"></ol>
       <div class="chips" data-chips></div>
 
@@ -35,7 +35,7 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><rect x="5" y="1" width="6" height="10" rx="3" fill="currentColor"/><path d="M2 8.5a6 6 0 0 0 12 0M8 14.5V17" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
         </button>
         <label class="sr-only" for="assistant-input" data-i18n="label">Your question</label>
-        <input id="assistant-input" name="q" maxlength="500" autocomplete="off" enterkeyhint="send" data-input data-i18n-placeholder="placeholder" placeholder="Ask Kiki about Kuiduan…" />
+        <input id="assistant-input" name="q" maxlength="500" autocomplete="off" enterkeyhint="send" data-input data-i18n-placeholder="placeholder" placeholder="Ask Jarvis about Kuiduan…" />
         <button class="icon-btn send" type="submit" data-i18n-label="send" aria-label="Send">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -62,11 +62,19 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
   .orb-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
-    min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 999px;
+    min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 999px; background: none;
     color: var(--ink); font: inherit; font-size: var(--t-xs); font-weight: 600; letter-spacing: -.005em; cursor: pointer;
   }
-  .orb-btn :global(.kiki) { --size: 36px !important; }
-  .orb-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* No base: the woven ring floats on its own, a touch larger so it still reads as a button */
+  .orb-btn:hover { transform: scale(1.06); }
+  .orb-btn:active { transform: scale(.95); }
+  .orb-btn :global(.jarvis) { --size: 44px !important; }
+  /* Phones: the label sits small under the ring, so the floating ring still says what it is */
+  .orb-btn { flex-direction: column; gap: .1rem; }
+  .orb-label {
+    white-space: nowrap; font-size: .6875rem; font-weight: 500; color: var(--muted);
+    text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg); /* stays legible over page text */
+  }
 
   /* ---- Phones / tablets: a floating button above the tab bar; the panel is a bottom sheet ---- */
   .assistant { position: fixed; z-index: 60; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom) + 3.75rem); }
@@ -90,20 +98,23 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       --H: min(84vh, 860px, calc((100vw - 120px) / 1.4142)); /* same as .device in global.css */
       /* Full-width strip, centred with flex: a transform here would trap the fixed-position toast inside it. */
       position: absolute; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none;
-      bottom: max(6px, calc((100vh - var(--H)) / 4 - 22px));
+      bottom: max(6px, calc((100vh - var(--H)) / 4 - 26px));
     }
     :global(html.js) .assistant { display: flex; }
     .orb-btn, .panel, .toast { pointer-events: auto; }
-    .orb-btn { min-height: 44px; padding: 0 1.1rem 0 .45rem; }
-    .orb-btn :global(.kiki) { --size: 30px !important; }
-    .orb-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
-    /* Stage Manager: the chat is its own window on the right; assistant.ts shrinks the phone into the space on the left. */
+    /* Same icon-over-name stack as on phones, centred on the device's axis */
+    .orb-btn { min-height: 44px; padding: 0 .4rem; }
+    .orb-btn :global(.jarvis) { --size: 34px !important; }
+    .orb-label { font-size: .75rem; }
+    /* Stage Manager: the chat is its own window beside the phone. assistant.ts centres the two as one group (setting
+       `right`) and shrinks the phone when space runs out; `right` glides in step with the phone when it (un)folds. */
     .panel {
       position: fixed; left: auto; right: 2rem; bottom: auto; top: 50%; translate: 0 -50%;
       width: clamp(320px, 30vw, 400px); height: min(680px, calc(100vh - 6rem)); max-height: none;
       padding: 1rem 1rem .7rem;
       transform-origin: 100% 50%;
       animation: slide-in .5s cubic-bezier(.3, 1.2, .4, 1);
+      transition: right .6s cubic-bezier(.3, 1, .4, 1), box-shadow .3s ease, background-color .3s ease;
     }
     @keyframes slide-in { from { opacity: 0; transform: translateX(40px) scale(.96); filter: blur(6px); } }
   }
@@ -181,5 +192,11 @@ const turnstile = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
   .toast button { min-height: 32px; padding: 0 .8rem; border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 600; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
   @media (min-width: 1000px) and (min-height: 640px) {
     .toast { top: max(8px, calc((100vh - min(84vh, 860px, calc((100vw - 120px) / 1.4142))) / 4 - 20px)); }
+  }
+  /* Short laptop screens: the strip under the phone is ~55px, so the icon-over-name stack shrinks to fit */
+  @media (min-width: 1000px) and (min-height: 640px) and (max-height: 820px) {
+    .orb-btn { min-height: 0; gap: 0; }
+    .orb-btn :global(.jarvis) { --size: 28px !important; }
+    .orb-label { font-size: .6875rem; line-height: 1.2; }
   }
 </style>
