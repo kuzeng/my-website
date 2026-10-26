@@ -14,7 +14,7 @@
 
 ## AI assistant (Jarvis)
 
-Jarvis, a composed AI butler (an original character, not affiliated with any film), behind a button under the phone. Visitors ask by voice or text; Claude Haiku 5.5 answers from `/kb.json` (built from `src/data/*.ts`, confirmed content only) plus the private Q&A you write on `/admin`. Unknown questions are logged for you to answer; visitors can leave their email.
+Jarvis, a composed AI butler (an original character, not affiliated with any film), behind a button under the phone. Visitors ask by voice or text; Claude Haiku 5.5 answers from `/kb.json` (built from `src/data/*.ts`, confirmed content only) plus the Q&A you write on `/admin` (not secret: a visitor can coax any of it out, so write only what you’d say publicly). Unknown questions are logged for you to answer; visitors can leave their email.
 
 - Front end: `src/components/Assistant.astro` + `src/scripts/assistant.ts`. Talks to the page through events: `assistant:state` (island waveform), `duo:navigate` / `duo:fold` (handled in `fold.ts`). Not rendered unless `PUBLIC_ASSISTANT_API` is set.
 - Back end: `worker/` (Cloudflare Worker + D1). `/api/chat`, `/api/lead`, `/api/speak`, `/admin`, and a daily digest cron.

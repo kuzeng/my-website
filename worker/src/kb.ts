@@ -59,9 +59,9 @@ export async function systemPrompt(env: Env): Promise<Anthropic.TextBlockParam[]
 <public_profile>
 ${profile}
 </public_profile>
-<private_facts>
+<owner_answers>
 ${qa || '(none yet)'}
-</private_facts>
+</owner_answers>
 </knowledge>`;
   return [
     { type: 'text', text: RULES },
