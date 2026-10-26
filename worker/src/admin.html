@@ -118,7 +118,7 @@ async function renderPending() {
   const rows = await api('/api/admin/pending');
   setCount('pending', rows.length);
   if (!rows.length) { view.innerHTML = '<p class="empty">没有待回答的问题 🎉</p>'; return; }
-  view.innerHTML = `<p class="hint">访客问过、但 AI 答不上来的问题，相同的问题已经合并。写好答案后，这个问题会直接加入知识库。</p>` +
+  view.innerHTML = `<p class="hint">访客问过、但 AI 答不上来的问题，相同的问题已经合并。写好答案后，这个问题会直接加入知识库。这里的答案任何访客都可能问出来，只写愿意公开的内容。</p>` +
     rows.map((r, i) => `
       <div class="card" data-i="${i}">
         <p class="q">${esc(r.question)}</p>
@@ -151,7 +151,7 @@ async function renderInterview() {
   const total = drafts.length + live.length;
   const pct = total ? Math.round((live.length / total) * 100) : 0;
   if (!drafts.length) { view.innerHTML = '<p class="empty">问卷全部答完了。可以去「知识库」随时修改。</p>'; return; }
-  view.innerHTML = `<p class="hint">这些是访客最可能问的问题。不想答的直接跳过就行，只有填了答案的才会被 AI 用到。</p>
+  view.innerHTML = `<p class="hint">这些是访客最可能问的问题。不想答的直接跳过就行，只有填了答案的才会被 AI 用到。这里的答案任何访客都可能问出来，只写愿意公开的内容。</p>
     <div class="meta"><span>已上线 ${live.length} / ${total}</span></div><div class="progress"><span style="width:${pct}%"></span></div>` +
     drafts.map((f) => `
       <div class="card" data-id="${f.id}">
@@ -178,7 +178,7 @@ async function renderInterview() {
 // ---------- 知识库 ----------
 async function renderFacts() {
   const facts = await api('/api/admin/facts?status=live');
-  view.innerHTML = `<p class="hint">AI 现在知道的私密问答（网站上公开的资料会自动包含，不用写在这里）。清空答案会把这一条退回问卷。</p>
+  view.innerHTML = `<p class="hint">AI 现在知道的补充问答（网站上公开的资料会自动包含，不用写在这里）。这里的答案任何访客都可能问出来，只写愿意公开的内容。清空答案会把这一条退回问卷。</p>
     <div class="card" data-new>
       <input type="text" placeholder="新问题，例如：他平时用什么键盘？" aria-label="新问题" data-q />
       <textarea placeholder="答案" aria-label="答案"></textarea>
@@ -190,7 +190,7 @@ async function renderFacts() {
         <textarea aria-label="答案">${esc(f.answer)}</textarea>
         <div class="row">${audienceSelect(f.audience)}<span class="meta">更新于 ${when(f.updated_at)}</span><span class="spacer"></span>
           <button class="danger" data-act="delete">删除</button><button class="primary" data-act="save">保存</button></div>
-      </div>`).join('') : '<p class="empty">还没有私密问答。先去「问卷」答几题吧。</p>');
+      </div>`).join('') : '<p class="empty">还没有补充问答。先去「问卷」答几题吧。</p>');
   view.onclick = async (e) => {
     const btn = e.target.closest('button[data-act]'); if (!btn) return;
     const card = btn.closest('.card');
